@@ -23,7 +23,7 @@ type Token struct {
 	Decimals     uint8     `bun:"decimals,notnull" json:"decimals"`
 	Logo         string    `bun:"logo,notnull" json:"logo"`
 	Slug         string    `bun:"slug,notnull" json:"slug"`
-	BlockchainID uint      `bun:"blockchain_id,notnull" json:"-"`
+	BlockchainID uint      `bun:"blockchain_id,notnull" json:"blockchainId"`
 	CreatedAt    time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp" json:"-"`
 	UpdatedAt    time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp" json:"-"`
 }
@@ -51,12 +51,13 @@ type QueryOptions struct {
 	TokenOut    string
 	PairAddress string
 	ChainID     uint
+	DexName     string
 	Slug        string
 }
 type ChainRepository interface {
 	GetBlockchains(ctx context.Context) ([]Chain, error)
 	GetBlockchain(ctx context.Context, opts QueryOptions) (Chain, error)
-	GetTokens(ctx context.Context) ([]Token, error)
+	GetTokens(ctx context.Context, opts QueryOptions) ([]Token, error)
 	GetPools(ctx context.Context, opts QueryOptions) ([]Pool, error)
 	GetDex(ctx context.Context, opts QueryOptions) (Dex, error)
 }

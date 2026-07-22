@@ -41,12 +41,15 @@ func (c *chainRepo) GetBlockchain(ctx context.Context, opts uatu.QueryOptions) (
 	return chain, nil
 }
 
-func (c *chainRepo) GetTokens(ctx context.Context) ([]uatu.Token, error) {
+func (c *chainRepo) GetTokens(ctx context.Context, opts uatu.QueryOptions) ([]uatu.Token, error) {
 	var tokens []uatu.Token
-	err := c.db.NewSelect().
-		Model(&tokens).
-		Scan(ctx)
-	if err != nil {
+
+	q := c.db.NewSelect().Model(&tokens)
+
+	if opts.ChainID != 0 {
+		q = q.Where("blockchain_id = ?", opts.ChainID)
+	}
+	if err := q.Scan(ctx); err != nil {
 		return nil, fmt.Errorf("could not get tokens: %w", err)
 	}
 	return tokens, nil
@@ -67,15 +70,25 @@ func (c *chainRepo) GetDex(ctx context.Context, opts uatu.QueryOptions) (uatu.De
 
 func (c *chainRepo) GetPools(ctx context.Context, opts uatu.QueryOptions) ([]uatu.Pool, error) {
 	var pools []uatu.Pool
-	if err := c.db.NewSelect().
-		Model(&pools).
-		Where("chain_id = ?", opts.ChainID).
-		Where(
+
+	q := c.db.NewSelect().Model(&pools)
+
+	if opts.ChainID != 0 {
+		q = q.Where("chain_id = ?", opts.ChainID)
+	}
+
+	if opts.DexName != "" {
+		q = q.Where("dex_name = ?", opts.DexName)
+	}
+
+	if opts.TokenIn != "" && opts.TokenOut != "" {
+		q = q.Where(
 			"(base_token_address = ? AND quote_token_address = ?)"+
 				" OR (base_token_address = ? AND quote_token_address = ?)",
 			opts.TokenIn, opts.TokenOut, opts.TokenOut, opts.TokenIn,
-		).
-		Scan(ctx); err != nil {
+		)
+	}
+	if err := q.Scan(ctx); err != nil {
 		return nil, fmt.Errorf("could not get pools: %w", err)
 	}
 	return pools, nil
