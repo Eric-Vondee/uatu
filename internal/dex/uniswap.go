@@ -347,6 +347,17 @@ func EncodeUniversalRouterExecute(cmd Command, input []byte, deadline *big.Int) 
 	return calldata, nil
 }
 
+func (c *Client) Swap(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {
+	switch d.PoolType {
+	case "v2":
+		return c.BuyV2(ctx, d)
+	case "v3":
+		return c.BuyV3(ctx, d)
+	default:
+		return nil, fmt.Errorf("unsupported pool type: %s", d.PoolType)
+	}
+}
+
 func (c *Client) BuyV2(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {
 	permit2Address := uatu.FormatEvmAddress(d.Dex.Permit2Address)
 	universalRouterAddress := uatu.FormatEvmAddress(d.Dex.UniversalRouterAddress)
