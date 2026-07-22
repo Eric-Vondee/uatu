@@ -1,0 +1,62 @@
+{
+  "name": "Mantle",
+  "symbol": "MNT",
+  "chainId": 5000,
+  "blockExplorer": "https://mantlescan.xyz",
+  "rpcUrl": "https://mantle-rpc.publicnode.com",
+  "nativeToken": "MNT",
+  "tokens": [
+    {
+      "name": "Mantle",
+      "symbol": "MNT",
+      "address": "0x0000000000000000000000000000000000000000",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/mantle.png",
+      "slug": "mnt"
+    },
+    {
+      "name": "Wrapped Mantle",
+      "symbol": "WMNT",
+      "address": "0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/mantle.png",
+      "slug": "wmnt"
+    },
+    {
+      "name": "Tether",
+      "symbol": "USDT",
+      "address": "0x201EBa5CC46D216Ce6DC03F6a759e8E766e956aE",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt.svg",
+      "slug": "usdt"
+    },
+    {
+      "name": "USDC",
+      "symbol": "USDC",
+      "address": "0x09Bc4E0D864854c6aFB6eB9A9cdF58aC190D0dF9",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdc.svg",
+      "slug": "usdc"
+    },
+    {
+      "name": "Wrapped Ether",
+      "symbol": "WETH",
+      "address": "0xdEAddEaDdeadDEadDEADDEAddEADDEAddead1111",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
+      "slug": "weth"
+    }
+  ],
+  "dex":  [
+    {
+      "name": "Merchant Moe",
+      "universalRouterAddress": "0x...",
+      "quoterAddress": "0x...",
+      "factoryAddress": "0x...",
+      "routerAddress": "0x...",
+      "slug": "merchant"
+    }
+  ],
+  "slug": "mantle",
+  "ecosystem": "evm"
+}

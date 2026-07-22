@@ -1,0 +1,66 @@
+{
+  "name": "Gnosis",
+  "symbol": "GNO",
+  "chainId": 100,
+  "blockExplorer": "https://gnosisscan.io",
+  "rpcUrl": "https://rpc.gnosischain.com",
+  "nativeToken": "GNO",
+  "tokens": [
+    {
+      "name": "Gnosis",
+      "symbol": "GNO",
+      "address": "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/gno.webp",
+      "slug": "gno"
+    },
+    {
+      "name": "Wrapped XDAI",
+      "symbol": "WXDAI",
+      "address": "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/xdai.svg",
+      "slug": "wxdai"
+    },
+    {
+      "name": "Tether",
+      "symbol": "USDT",
+      "address": "0x4ECaBa5870353805a9F068101A40E0f32ed605C6",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt.svg",
+      "slug": "usdt"
+    },
+    {
+      "name": "USDC",
+      "symbol": "USDC",
+      "address": "0x2a22f9c3b484c3629090FeED35F17Ff8F88f76F0",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdc.svg",
+      "slug": "usdc"
+    },
+    {
+      "name": "Wrapped Ether",
+      "symbol": "WETH",
+      "address": "0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
+      "slug": "weth"
+    },
+    {
+      "name": "Wrapped BTC",
+      "symbol": "WBTC",
+      "address": "0x8e5bBbb09Ed1ebdE8674Cda39A0c169401db4252",
+      "decimals": 8,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/wbtc.svg",
+      "slug": "wbtc"
+    }
+  ],
+  "dex": [
+    {
+      "name": "CowSwap",
+      "slug": "cowswap"
+    }
+  ],
+  "slug": "gnosis",
+  "ecosystem": "evm"
+}

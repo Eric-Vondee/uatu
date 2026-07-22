@@ -1,0 +1,81 @@
+{
+  "name": "Optimism",
+  "symbol": "OP",
+  "chainId": 10,
+  "blockExplorer": "https://optimistic.etherscan.io",
+  "rpcUrl": "https://optimism-rpc.publicnode.com",
+  "nativeToken": "ETH",
+  "tokens": [
+    {
+      "name": "ETHER",
+      "symbol": "ETH",
+      "address": "0x0000000000000000000000000000000000000000",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
+      "slug": "eth"
+    },
+    {
+      "name": "Optimism",
+      "symbol": "OP",
+      "address": "0x4200000000000000000000000000000000000042",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/op.svg",
+      "slug": "op"
+    },
+    {
+      "name": "Tether",
+      "symbol": "USDT",
+      "address": "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt.svg",
+      "slug": "usdt"
+    },
+    {
+      "name": "USD Coin",
+      "symbol": "USDC",
+      "address": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdc.svg",
+      "slug": "usdc"
+    },
+    {
+      "name": "DAI",
+      "symbol": "DAI",
+      "address": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/dai.svg",
+      "slug": "dai"
+    },
+    {
+      "name": "Wrapped Ether",
+      "symbol": "WETH",
+      "address": "0x4200000000000000000000000000000000000006",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
+      "slug": "weth"
+    },
+    {
+      "name": "Wrapped BTC",
+      "symbol": "WBTC",
+      "address": "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
+      "decimals": 8,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/wbtc.svg",
+      "slug": "wbtc"
+    }
+  ],
+  "dex": [
+    {
+      "name": "Uniswap",
+      "v2RouterAddress": "0x4A7b5Da61326A6379179b40d00F57E5bbDC962c2",
+      "v2FactoryAddress": "0x0c3c1c532F1e39EdF36BE9Fe0bE1410313E074Bf",
+      "v3FactoryAddress": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+      "v3RouterAddress": "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+      "v3QuoterAddress": "0x61fFE014bA17989E743c5F6cB21bF9697530B21e",
+      "permit2Address": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+      "universalRouterAddress": "0x8B844f885672f333Bc0042cB669255f93a4C1E6b",
+      "slug": "uniswap"
+    }
+  ],
+  "slug": "optimism",
+  "ecosystem": "evm"
+}

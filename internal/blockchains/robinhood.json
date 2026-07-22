@@ -1,0 +1,68 @@
+{
+  "name": "Robinhood Chain",
+  "symbol": "Robinhood",
+  "chainId": 4663,
+  "blockExplorer": "https://explorer.chain.robinhood.com",
+  "rpcUrl": "https://rpc.mainnet.chain.robinhood.com",
+  "nativeToken": "ETH",
+  "tokens": [
+    {
+      "name": "ETHER",
+      "symbol": "ETH",
+      "address": "0x0000000000000000000000000000000000000000",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
+      "slug": "eth"
+    },
+    {
+      "name": "Wrapped Ether",
+      "symbol": "WETH",
+      "address": "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
+      "slug": "weth"
+    },
+    {
+      "name": "Ethena USDe",
+      "symbol": "USDE",
+      "address": "0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usde.png",
+      "slug": "usde"
+    },
+    {
+      "name": "Global Dollar",
+      "symbol": "USDG",
+      "address": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdg.svg",
+      "slug": "usdg"
+    }
+  ],
+  "dex": [
+    {
+      "name": "Uniswap",
+      "v2RouterAddress": "0x89e5db8b5aa49aa85ac63f691524311aeb649eba",
+      "v2FactoryAddress": "0x8bceaa40b9acdfaedf85adf4ff01f5ad6517937f",
+      "v3FactoryAddress": "0x1f7d7550b1b028f7571e69a784071f0205fd2efa",
+      "v3RouterAddress": "0xcaf681a66d020601342297493863e78c959e5cb2",
+      "v3QuoterAddress": "0x33e885ed0ec9bf04ecfb19341582aadcb4c8a9e7",
+      "permit2Address": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+      "universalRouterAddress": "0x8876789976decbfcbbbe364623c63652db8c0904",
+      "slug": "uniswap"
+    },
+    {
+      "name": "PancakeSwap",
+      "v2RouterAddress": "0x8cFe327CEc66d1C090Dd72bd0FF11d690C33a2Eb",
+      "v2FactoryAddress": "0x02a84c1b3BBD7401a5f7fa98a384EBC70bB5749E",
+      "v3FactoryAddress": "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865",
+      "v3RouterAddress": "0x13f4EA83D0bd40E75C8222255bc855a974568Dd4",
+      "v3QuoterAddress": "0x8553AA1615549A86882151784b329B017aA7c832",
+      "permit2Address": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+      "universalRouterAddress": "0xE28c0e44F4016b073db20cF28971CAc6ce3664D3",
+      "slug": "pancakeswap"
+    }
+  ],
+  "slug": "robinhood",
+  "ecosystem": "evm"
+}

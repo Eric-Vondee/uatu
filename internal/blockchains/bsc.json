@@ -1,0 +1,96 @@
+{
+  "name": "BNB Smart Chain",
+  "symbol": "BNB",
+  "chainId": 56,
+  "blockExplorer": "https://bscscan.com",
+  "rpcUrl": "https://bsc-rpc.publicnode.com",
+  "nativeToken": "BNB",
+  "tokens": [
+    {
+      "name": "BNB",
+      "symbol": "BNB",
+      "address": "0x0000000000000000000000000000000000000000",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/bnb.png",
+      "slug": "bnb"
+    },
+    {
+      "name": "Wrapped BNB",
+      "symbol": "WBNB",
+      "address": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/bnb.png",
+      "slug": "wbnb"
+    },
+    {
+      "name": "Tether",
+      "symbol": "USDT",
+      "address": "0x55d398326f99059fF775485246999027B3197955",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt.svg",
+      "slug": "usdt"
+    },
+    {
+      "name": "USDC",
+      "symbol": "USDC",
+      "address": "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdc.svg",
+      "slug": "usdc"
+    },
+    {
+      "name": "DAI",
+      "symbol": "DAI",
+      "address": "0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/dai.svg",
+      "slug": "dai"
+    },
+    {
+      "name": "Binance-Peg Ethereum",
+      "symbol": "WETH",
+      "address": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
+      "slug": "weth"
+    },
+    {
+      "name": "Wrapped BTC",
+      "symbol": "WBTC",
+      "address": "0x39665e85a68a4d7328b8799135E2ff301a0Ca86f",
+      "decimals": 8,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/wbtc.svg",
+      "slug": "wbtc"
+    }
+  ],
+  "dex": [
+    {
+      "name": "Uniswap",
+      "v2RouterAddress": "0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24",
+      "v2FactoryAddress": "0x8909Dc15e40173Ff4699343b6eB8132c65e18eC6",
+      "v3FactoryAddress": "0xdB1d10011AD0Ff90774D0C6Bb92e5C5c8b4461F7",
+      "v3RouterAddress": "0xB971eF87ede563556b2ED4b1C0b0019111Dd85d2",
+      "v3QuoterAddress": "0x78D78E420Da98ad378D7799bE8f4AF69033EB077",
+      "permit2Address": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+      "universalRouterAddress": "0x8B844f885672f333Bc0042cB669255f93a4C1E6b",
+      "slug": "uniswap"
+    },
+    {
+      "name": "PancakeSwap",
+      "v2RouterAddress": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
+      "v2FactoryAddress": "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73",
+      "v3FactoryAddress": "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865",
+      "v3RouterAddress": "0x1b81D678ffb9C0263b24A97847620C99d213eB14",
+      "v3QuoterAddress": "0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997",
+      "permit2Address": "0x31c2F6fcFf4F8759b3Bd5Bf0e1084A055615c768",
+      "universalRouterAddress": "0x1A0A18AC4BECDDbd6389559687d1A73d8927E416",
+      "slug": "pancakeswap"
+    },
+    {
+      "name": "CowSwap",
+      "slug": "cowswap"
+    }
+  ],
+  "slug": "bsc",
+  "ecosystem": "evm"
+}

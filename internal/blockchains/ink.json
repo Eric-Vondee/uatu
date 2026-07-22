@@ -1,0 +1,66 @@
+{
+  "name": "Ink",
+  "symbol": "INK",
+  "chainId": 57073,
+  "blockExplorer": "https://explorer.inkonchain.com",
+  "rpcUrl": "https://rpc-gel.inkonchain.com",
+  "nativeToken": "ETH",
+  "tokens": [
+    {
+      "name": "ETHER",
+      "symbol": "ETH",
+      "address": "0x0000000000000000000000000000000000000000",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
+      "slug": "eth"
+    },
+    {
+      "name": "Wrapped Ether",
+      "symbol": "WETH",
+      "address": "0x4200000000000000000000000000000000000006",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
+      "slug": "weth"
+    },
+    {
+      "name": "Tether (USDT0)",
+      "symbol": "USDT0",
+      "address": "0x0200C29006150606B650577BBE7B6248F58470c1",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt.svg",
+      "slug": "usdt0"
+    },
+    {
+      "name": "USDC",
+      "symbol": "USDC",
+      "address": "0x2D270e6886d130D724215A266106e6832161EAEd",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdc.svg",
+      "slug": "usdc"
+    },
+    {
+      "name": "Wrapped Bitcoin",
+      "symbol": "WBTC",
+      "address": "0x73E0C0d45E048D25Fc26Fa3159b0aA04BfA4Db98",
+      "decimals": 8,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/wbtc.svg",
+      "slug": "wbtc"
+    }
+  ],
+  "dex": [
+    {
+      "name": "Velodrome",
+      "universalRouterAddress": "0x...",
+      "quoterAddress": "0x...",
+      "factoryAddress": "0x...",
+      "routerAddress": "0x...",
+      "slug": "velodrome"
+    },
+    {
+      "name": "CowSwap",
+      "slug": "cowswap"
+    }
+  ],
+  "slug": "ink",
+  "ecosystem": "evm"
+}

@@ -1,0 +1,85 @@
+{
+  "name": "Avalanche",
+  "symbol": "AVAX",
+  "chainId": 43114,
+  "blockExplorer": "https://snowtrace.io",
+  "rpcUrl": "https://avalanche-c-chain-rpc.publicnode.com",
+  "nativeToken": "AVAX",
+  "tokens": [
+    {
+      "name": "Avalanche",
+      "symbol": "AVAX",
+      "address": "0x0000000000000000000000000000000000000000",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/avax.svg",
+      "slug": "avax"
+    },
+    {
+      "name": "Wrapped AVAX",
+      "symbol": "WAVAX",
+      "address": "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/avax.svg",
+      "slug": "wavax"
+    },
+    {
+      "name": "Tether",
+      "symbol": "USDT",
+      "address": "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt.svg",
+      "slug": "usdt"
+    },
+    {
+      "name": "USDC",
+      "symbol": "USDC",
+      "address": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdc.svg",
+      "slug": "usdc"
+    },
+    {
+      "name": "DAI (Bridged)",
+      "symbol": "DAI.e",
+      "address": "0xd586E7F844cEa2F87f50152665BCbc2C279D8d70",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/dai.svg",
+      "slug": "dai"
+    },
+    {
+      "name": "Wrapped Ether (Bridged)",
+      "symbol": "WETH",
+      "address": "0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
+      "slug": "weth"
+    },
+    {
+      "name": "Bitcoin (Avalanche Bridged)",
+      "symbol": "BTC.b",
+      "address": "0x152b9d0FdC40C096757F570A51E494bd4b943E50",
+      "decimals": 8,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/btcb.svg",
+      "slug": "wbtc"
+    }
+  ],
+  "dex": [
+    {
+      "name": "Uniswap",
+      "v2RouterAddress":"0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24",
+      "v2FactoryAddress": "0x9e5A52f57b3038F1B8EeE45F28b3C1967e22799C",
+      "v3QuoterAddress": "0xbe0F5544EC67e9B3b2D979aaA43f18Fd87E6257F",
+      "v3FactoryAddress": "0x740b1c1de25031C31FF4fC9A62f554A55cdC1baD",
+      "v3RouterAddress": "0xbb00FF08d01D300023C629E8fFfFcb65A5a578cE",
+      "permit2Address": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+      "universalRouterAddress": "0x8B844f885672f333Bc0042cB669255f93a4C1E6b",
+      "slug": "uniswap"
+    },
+    {
+      "name": "CowSwap",
+      "slug": "cowswap"
+    }
+  ],
+  "slug": "avalanche",
+  "ecosystem": "evm"
+}

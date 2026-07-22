@@ -1,0 +1,88 @@
+{
+  "name": "Ethereum",
+  "symbol": "ETH",
+  "chainId": 1,
+  "blockExplorer": "https://etherscan.io",
+  "rpcUrl": "https://ethereum-rpc.publicnode.com",
+  "nativeToken": "ETH",
+  "tokens": [
+    {
+      "name": "ETHER",
+      "symbol": "ETH",
+      "address": "0x0000000000000000000000000000000000000000",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
+      "slug": "eth"
+    },
+    {
+      "name": "Wrapped Ether",
+      "symbol": "WETH",
+      "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
+      "slug": "weth"
+    },
+    {
+      "name": "Tether",
+      "symbol": "USDT",
+      "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt.svg",
+      "slug": "usdt"
+    },
+    {
+      "name": "USDC",
+      "symbol": "USDC",
+      "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdc.svg",
+      "slug": "usdc"
+    },
+    {
+      "name": "DAI",
+      "symbol": "DAI",
+      "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/dai.svg",
+      "slug": "dai"
+    },
+    {
+      "name": "Wrapped BTC",
+      "symbol": "WBTC",
+      "address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+      "decimals": 8,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/wbtc.svg",
+      "slug": "wbtc"
+    }
+  ],
+  "dex": [
+    {
+      "name": "Uniswap",
+      "v2RouterAddress": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+      "v2FactoryAddress": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+      "v3FactoryAddress": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+      "v3RouterAddress": "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+      "v3QuoterAddress": "0x61fFE014bA17989E743c5F6cB21bF9697530B21e",
+      "permit2Address": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+      "universalRouterAddress": "0x66a9893cc07d91d95644aedd05d03f95e1dba8af",
+      "slug": "uniswap"
+    },
+    {
+      "name": "PancakeSwap",
+      "v2RouterAddress": "0xEfF92A263d31888d860bD50809A8D171709b7b1c",
+      "v2FactoryAddress": "0x1097053Fd2ea711dad45caCcc45EfF7548fCB362",
+      "v3FactoryAddress": "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865",
+      "v3RouterAddress": "0x1b81D678ffb9C0263b24A97847620C99d213eB14",
+      "v3QuoterAddress": "0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997",
+      "permit2Address": "0x31c2F6fcFf4F8759b3Bd5Bf0e1084A055615c768",
+      "universalRouterAddress": "0x65b382653f7C31bC0Af67f188122035461ec9C76",
+      "slug": "pancakeswap"
+    },
+    {
+      "name": "CowSwap",
+      "slug": "cowswap"
+    }
+  ],
+  "slug": "ethereum",
+  "ecosystem": "evm"
+}

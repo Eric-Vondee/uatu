@@ -1,0 +1,54 @@
+{
+  "name": "Plasma",
+  "symbol": "XPL",
+  "chainId": 9745,
+  "blockExplorer": "https://plasmascan.to",
+  "rpcUrl": "https://rpc.plasma.to",
+  "nativeToken": "XPL",
+  "tokens": [
+    {
+      "name": "XPL",
+      "symbol": "XPL",
+      "address": "0x0000000000000000000000000000000000000000",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/plasma.png",
+      "slug": "xpl"
+    },
+    {
+      "name": "Wrapped XPL",
+      "symbol": "WXPL",
+      "address": "0x6100E367285b01F48D07953803A2d8dCA5D19873",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/plasma.png",
+      "slug": "wxpl"
+    },
+    {
+      "name": "Tether (USDT0)",
+      "symbol": "USDT0",
+      "address": "0xB8CE59FC3717ada4C02eaDF9682A9e934F625ebb",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt.svg",
+      "slug": "usdt0"
+    },
+    {
+      "name": "Wrapped Ether",
+      "symbol": "WETH",
+      "address": "0x9895D81bB462A195b4922ED7De0e3ACD007c32CB",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
+      "slug": "weth"
+    }
+  ],
+  "dex": [
+    {
+      "name": "CowSwap",
+      "slug": "cowswap"
+    },
+    {
+      "name": "Lithos",
+      "slug": "lithos"
+    }
+  ],
+  "slug": "plasma",
+  "ecosystem": "evm"
+}

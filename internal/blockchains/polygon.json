@@ -1,0 +1,85 @@
+{
+  "name": "Polygon",
+  "symbol": "POL",
+  "chainId": 137,
+  "blockExplorer": "https://polygonscan.com",
+  "rpcUrl": "https://polygon-bor-rpc.publicnode.com",
+  "nativeToken": "POL",
+  "tokens": [
+    {
+      "name": "POL",
+      "symbol": "POL",
+      "address": "0x0000000000000000000000000000000000000000",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/polygon.svg",
+      "slug": "pol"
+    },
+    {
+      "name": "Wrapped POL",
+      "symbol": "WPOL",
+      "address": "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/polygon.svg",
+      "slug": "wpol"
+    },
+    {
+      "name": "Tether (USDT0)",
+      "symbol": "USDT0",
+      "address": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt.svg",
+      "slug": "usdt0"
+    },
+    {
+      "name": "USDC",
+      "symbol": "USDC",
+      "address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdc.svg",
+      "slug": "usdc"
+    },
+    {
+      "name": "DAI",
+      "symbol": "DAI",
+      "address": "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/dai.svg",
+      "slug": "dai"
+    },
+    {
+      "name": "Wrapped Ether",
+      "symbol": "WETH",
+      "address": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
+      "slug": "weth"
+    },
+    {
+      "name": "Wrapped BTC",
+      "symbol": "WBTC",
+      "address": "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
+      "decimals": 8,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/wbtc.svg",
+      "slug": "wbtc"
+    }
+  ],
+  "dex": [
+    {
+      "name": "Uniswap",
+      "v2RouterAddress": "0xedf6066a2b290C185783862C7F4776A2C8077AD1",
+      "v2FactoryAddress": "0x9e5A52f57b3038F1B8EeE45F28b3C1967e22799C",
+      "v3FactoryAddress": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+      "v3RouterAddress": "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+      "v3QuoterAddress": "0x61fFE014bA17989E743c5F6cB21bF9697530B21e",
+      "permit2Address": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+      "universalRouterAddress": "0x8B844f885672f333Bc0042cB669255f93a4C1E6b",
+      "slug": "uniswap"
+    },
+    {
+      "name": "CowSwap",
+      "slug": "cowswap"
+    }
+  ],
+  "slug": "polygon",
+  "ecosystem": "evm"
+}

@@ -1,0 +1,96 @@
+{
+  "name": "Base",
+  "symbol": "BASE",
+  "chainId": 8453,
+  "blockExplorer": "https://basescan.org",
+  "rpcUrl": "https://base-rpc.publicnode.com",
+  "nativeToken": "ETH",
+  "tokens": [
+    {
+      "name": "ETHER",
+      "symbol": "ETH",
+      "address": "0x0000000000000000000000000000000000000000",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
+      "slug": "eth"
+    },
+    {
+      "name": "Wrapped Ether",
+      "symbol": "WETH",
+      "address": "0x4200000000000000000000000000000000000006",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
+      "slug": "weth"
+    },
+    {
+      "name": "Tether",
+      "symbol": "USDT",
+      "address": "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt.svg",
+      "slug": "usdt"
+    },
+    {
+      "name": "USDC",
+      "symbol": "USDC",
+      "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdc.svg",
+      "slug": "usdc"
+    },
+    {
+      "name": "DAI",
+      "symbol": "DAI",
+      "address": "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/dai.svg",
+      "slug": "dai"
+    },
+    {
+      "name": "Wrapped BTC",
+      "symbol": "WBTC",
+      "address": "0x1ceA84203673764244E05693e42E6Ace62bE9BA5",
+      "decimals": 8,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/wbtc.svg",
+      "slug": "wbtc"
+    }
+  ],
+  "dex": [
+    {
+      "name": "Uniswap",
+      "v2RouterAddress": "0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24",
+      "v2FactoryAddress": "0x8909Dc15e40173Ff4699343b6eB8132c65e18eC6",
+      "v3FactoryAddress": "0x33128a8fC17869897dcE68Ed026d694621f6FDfD",
+      "v3RouterAddress": "0x2626664c2603336E57B271c5C0b26F421741e481",
+      "v3QuoterAddress": "0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a",
+      "permit2Address": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+      "universalRouterAddress": "0xFdf682F51FE81Aa4898F0AE2163d8A55c127fbC7",
+      "slug": "uniswap"
+    },
+    {
+      "name": "PancakeSwap",
+      "v2RouterAddress": "0x8cFe327CEc66d1C090Dd72bd0FF11d690C33a2Eb",
+      "v2FactoryAddress": "0x02a84c1b3BBD7401a5f7fa98a384EBC70bB5749E",
+      "v3FactoryAddress": "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865",
+      "v3RouterAddress": "0x1b81D678ffb9C0263b24A97847620C99d213eB14",
+      "v3QuoterAddress": "0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997",
+      "permit2Address": "0x31c2F6fcFf4F8759b3Bd5Bf0e1084A055615c768",
+      "universalRouterAddress": "0xFE6508f0015C778Bdcc1fB5465bA5ebE224C9912",
+      "slug": "pancakeswap"
+    },
+    {
+      "name": "Aerodrome",
+      "universalRouterAddress": "0x...",
+      "quoterAddress": "0x...",
+      "factoryAddress": "0x...",
+      "routerAddress": "0x...",
+      "slug": "aerodrome"
+    },
+    {
+      "name": "CowSwap",
+      "slug": "cowswap"
+    }
+  ],
+  "slug": "base",
+  "ecosystem": "evm"
+}

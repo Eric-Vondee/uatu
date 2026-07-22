@@ -1,0 +1,76 @@
+{
+  "name": "Monad",
+  "symbol": "MON",
+  "chainId": 143,
+  "blockExplorer": "https://monadscan.com",
+  "rpcUrl": "https://rpc.monad.xyz",
+  "nativeToken": "MON",
+  "tokens": [
+    {
+      "name": "Monad",
+      "symbol": "MON",
+      "address": "0x0000000000000000000000000000000000000000",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/monad.svg",
+      "slug": "mon"
+    },
+    {
+      "name": "Wrapped MON",
+      "symbol": "WMON",
+      "address": "0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/monad.svg",
+      "slug": "wmon"
+    },
+    {
+      "name": "Tether (USDT0)",
+      "symbol": "USDT0",
+      "address": "0xe7cd86e13AC4309349F30B3435a9d337750fC82D",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt.svg",
+      "slug": "usdt0"
+    },
+    {
+      "name": "USDC",
+      "symbol": "USDC",
+      "address": "0x754704Bc059F8C67012fEd69BC8A327a5aafb603",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdc.svg",
+      "slug": "usdc"
+    },
+    {
+      "name": "Wrapped BTC",
+      "symbol": "WBTC",
+      "address": "0x0555E30da8f98308EdB960aa94C0Db47230d2B9c",
+      "decimals": 8,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/wbtc.svg",
+      "slug": "wbtc"
+    }
+  ],
+  "dex": [
+    {
+      "name": "Uniswap",
+      "v2RouterAddress": "0x4b2ab38dbf28d31d467aa8993f6c2585981d6804",
+      "v2FactoryAddress": "0x182a927119d56008d921126764bf884221b10f59",
+      "v3FactoryAddress": "0x204faca1764b154221e35c0d20abb3c525710498",
+      "v3RouterAddress": "0xfe31f71c1b106eac32f1a19239c9a9a72ddfb900",
+      "v3QuoterAddress": "0x661e93cca42afacb172121ef892830ca3b70f08d",
+      "permit2Address": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+      "universalRouterAddress": "0xFdf682F51FE81Aa4898F0AE2163d8A55c127fbC7",
+      "slug": "uniswap"
+    },
+    {
+      "name": "PancakeSwap",
+      "v2RouterAddress": "0xB1Bc24c34e88f7D43D5923034E3a14B24DaACfF9",
+      "v2FactoryAddress": "0x02a84c1b3BBD7401a5f7fa98a384EBC70bB5749E",
+      "v3FactoryAddress": "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865",
+      "v3RouterAddress": "0x1b81D678ffb9C0263b24A97847620C99d213eB14",
+      "v3QuoterAddress": "0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997",
+      "permit2Address": "",
+      "universalRouterAddress": "",
+      "slug": "pancakeswap"
+    }
+  ],
+  "slug": "monad",
+  "ecosystem": "evm"
+}

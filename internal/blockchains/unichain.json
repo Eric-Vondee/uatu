@@ -1,0 +1,81 @@
+{
+  "name": "Unichain",
+  "symbol": "UNI",
+  "chainId": 130,
+  "blockExplorer": "https://uniscan.xyz",
+  "rpcUrl": "https://mainnet.unichain.org",
+  "nativeToken": "ETH",
+  "tokens": [
+    {
+      "name": "ETHER",
+      "symbol": "ETH",
+      "address": "0x0000000000000000000000000000000000000000",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
+      "slug": "eth"
+    },
+    {
+      "name": "Uniswap",
+      "symbol": "UNI",
+      "address": "0x8f187aA05619a017077f5308904739877ce9eA21",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/uni.png",
+      "slug": "uni"
+    },
+    {
+      "name": "Tether (USDT0)",
+      "symbol": "USDT0",
+      "address": "0x9151434b16b9763660705744891fA906F660EcC5",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt.svg",
+      "slug": "usdt0"
+    },
+    {
+      "name": "USDC",
+      "symbol": "USDC",
+      "address": "0x078D782b760474a361dDA0AF3839290b0EF57AD6",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdc.svg",
+      "slug": "usdc"
+    },
+    {
+      "name": "DAI",
+      "symbol": "DAI",
+      "address": "0x20CAb320A855b39F724131C69424240519573f81",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/dai.svg",
+      "slug": "dai"
+    },
+    {
+      "name": "Wrapped Ether",
+      "symbol": "WETH",
+      "address": "0x4200000000000000000000000000000000000006",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
+      "slug": "weth"
+    },
+    {
+      "name": "Wrapped BTC",
+      "symbol": "WBTC",
+      "address": "0x0555E30da8f98308EdB960aa94C0Db47230d2B9c",
+      "decimals": 8,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/wbtc.svg",
+      "slug": "wbtc"
+    }
+  ],
+  "dex": [
+    {
+      "name": "Uniswap",
+      "v2RouterAddress": "0x284f11109359a7e1306c3e447ef14d38400063ff",
+      "v2FactoryAddress": "0x1f98400000000000000000000000000000000002",
+      "v3FactoryAddress": "0x1f98400000000000000000000000000000000003",
+      "v3RouterAddress": "0x73855d06de49d0fe4a9c42636ba96c62da12ff9c",
+      "v3QuoterAddress": "0x385a5cf5f83e99f7bb2852b6a19c3538b9fa7658",
+      "permit2Address": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+      "universalRouterAddress": "0xFdf682F51FE81Aa4898F0AE2163d8A55c127fbC7",
+      "slug": "uniswap"
+    }
+  ],
+  "slug": "unichain",
+  "ecosystem": "evm"
+}
