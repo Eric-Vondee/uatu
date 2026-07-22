@@ -35,6 +35,7 @@ type IDexRequest struct {
 	ChainId                                       uint
 	Dex                                           Dex
 	TokenIn, TokenOut, WalletAddress, PairAddress common.Address
+	PoolType                                      string
 }
 
 type IDexResponse struct {
