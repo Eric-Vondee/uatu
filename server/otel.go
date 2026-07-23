@@ -4,6 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+	"sync"
+
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/uatu/config"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
@@ -17,10 +22,6 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 	"go.opentelemetry.io/otel/trace/noop"
-	"net/http"
-	"net/url"
-	"strings"
-	"sync"
 )
 
 const serviceName = "uatu.server"

@@ -10,8 +10,6 @@ import (
 )
 
 type Dex struct {
-	bun.BaseModel `bun:"table:dexes,alias:dexes"`
-
 	ID                     uuid.UUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"-"`
 	Name                   string    `bun:"name,notnull" json:"name"`
 	Slug                   string    `bun:"slug,notnull" json:"slug"`
@@ -27,6 +25,8 @@ type Dex struct {
 	UniversalRouterAddress string    `bun:"universal_router_address,nullzero" json:"universalRouterAddress,omitempty"`
 	CreatedAt              time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp" json:"-"`
 	UpdatedAt              time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp" json:"-"`
+
+	bun.BaseModel `bun:"table:dexes,alias:dexes" json:"-"`
 }
 
 type IDexRequest struct {

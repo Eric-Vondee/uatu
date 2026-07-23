@@ -8,8 +8,6 @@ import (
 )
 
 type Pool struct {
-	bun.BaseModel `bun:"table:pools,alias:pools"`
-
 	ID                uuid.UUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"-"`
 	Name              string    `bun:"name,notnull" json:"name"`
 	DexName           string    `bun:"dex_name,notnull" json:"dexName"`
@@ -26,4 +24,6 @@ type Pool struct {
 	MarketCap         string    `bun:"market_cap,nullzero" json:"marketCap,omitempty"`
 	CreatedAt         time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp" json:"-"`
 	UpdatedAt         time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp" json:"-"`
+
+	bun.BaseModel `bun:"table:pools,alias:pools" json:"-"`
 }

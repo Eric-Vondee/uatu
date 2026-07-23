@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+
 	"github.com/uatu/config"
 
 	"github.com/alexlast/bunzap"

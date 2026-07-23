@@ -18,6 +18,7 @@ const (
 	Failed    TransactionStatus = "failed"
 )
 
+// Actions is a single transaction the client must submit to execute a quote.
 type Actions struct {
 	Message string `json:"message"`
 	Amount  string `json:"amount"`
@@ -29,13 +30,12 @@ type Actions struct {
 }
 
 type Quote struct {
-	bun.BaseModel      `bun:"table:quotes,alias:quotes"`
 	ID                 uuid.UUID         `bun:"type:uuid,default:uuid_v4(),pk" json:"-"`
 	QuoteId            string            `bun:"quote_id,notnull,unique" json:"quoteId"`
 	AmountIn           string            `bun:"amount_in,notnull,type:numeric(78,0)" json:"amountIn"`
 	AmountOut          string            `bun:"amount_out,notnull,type:numeric(78,0)" json:"amountOut"`
-	AmountInFloat      decimal.Decimal   `bun:"amount_in_float" json:"amountInFloat"`
-	AmountOutFloat     decimal.Decimal   `bun:"amount_out_float" json:"amountOutFloat"`
+	AmountInFloat      decimal.Decimal   `bun:"amount_in_float" json:"amountInFloat" swaggertype:"string"`
+	AmountOutFloat     decimal.Decimal   `bun:"amount_out_float" json:"amountOutFloat" swaggertype:"string"`
 	OriginChain        string            `bun:"origin_chain,notnull" json:"originChain"`
 	OriginChainId      uint              `bun:"origin_chain_id,notnull" json:"originChainId"`
 	DestinationChain   string            `bun:"destination_chain,notnull" json:"destinationChain"`
@@ -47,10 +47,12 @@ type Quote struct {
 	Hash               string            `bun:"hash" json:"hash,omitempty"`
 	ExplorerUrl        string            `bun:"explorer_url" json:"explorerUrl,omitempty"`
 	Steps              []Actions         `bun:"steps,notnull" json:"steps"`
-	Status             TransactionStatus `bun:"type:varchar(100),default:'pending',notnull" json:"status"`
-	Deadline           *big.Int          `bun:"deadline,notnull" json:"deadline"`
+	Status             TransactionStatus `bun:"type:varchar(100),default:'pending',notnull" json:"status" swaggertype:"string" enums:"pending,completed,failed"`
+	Deadline           *big.Int          `bun:"deadline,notnull" json:"deadline" swaggertype:"integer"`
 	CreatedAt          time.Time         `bun:"created_at,notnull" json:"createdAt"`
 	UpdatedAt          time.Time         `bun:"updated_at,notnull" json:"updatedAt"`
+
+	bun.BaseModel `bun:"table:quotes,alias:quotes" json:"-"`
 }
 
 type QuoteRepository interface {

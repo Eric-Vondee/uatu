@@ -15,8 +15,6 @@ import (
 var files embed.FS
 
 type Token struct {
-	bun.BaseModel `bun:"table:tokens,alias:tokens"`
-
 	ID           uuid.UUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"-"`
 	Name         string    `bun:"name,notnull" json:"name"`
 	Symbol       string    `bun:"symbol,notnull" json:"symbol"`
@@ -27,11 +25,11 @@ type Token struct {
 	BlockchainID uint      `bun:"blockchain_id,notnull" json:"blockchainId"`
 	CreatedAt    time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp" json:"-"`
 	UpdatedAt    time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp" json:"-"`
+
+	bun.BaseModel `bun:"table:tokens,alias:tokens" json:"-"`
 }
 
 type Chain struct {
-	bun.BaseModel `bun:"table:blockchains,alias:blockchains"`
-
 	ID            uuid.UUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"-"`
 	Name          string    `bun:"name,notnull" json:"name"`
 	Symbol        string    `bun:"symbol,notnull" json:"symbol"`
@@ -45,6 +43,8 @@ type Chain struct {
 	Ecosystem     string    `bun:"ecosystem,notnull" json:"ecosystem"`
 	CreatedAt     time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp" json:"-"`
 	UpdatedAt     time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp" json:"-"`
+
+	bun.BaseModel `bun:"table:blockchains,alias:blockchains" json:"-"`
 }
 
 type QueryOptions struct {

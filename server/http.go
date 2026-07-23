@@ -2,11 +2,12 @@ package server
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/go-chi/render"
 	"github.com/uatu/config"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
-	"net/http"
 )
 
 type HTTPHandler func(
