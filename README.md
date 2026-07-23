@@ -24,6 +24,7 @@ available on a given chain is defined per chain in `internal/blockchains/`.
 cmd/               HTTP server entrypoint
 cmd/cli/           Cobra CLI (database seeding)
 config/            Viper config loading
+swagger/           generated API spec (swag) — committed, do not hand-edit
 server/            chi routes, handlers, OpenTelemetry setup
 internal/blockchains/  chain definitions (JSON, embedded at build time)
 internal/contracts/    generated Uniswap v2/v3 + Permit2 bindings
@@ -91,27 +92,13 @@ can produce duplicate-key errors on the other tables.
 
 ## API
 
-| Method | Path | Description |
-| --- | --- | --- |
-| `POST` | `/quotes` | Create a swap quote |
-| `GET` | `/blockchains` | List supported blockchains |
-| `GET` | `/blockchains/tokens?chainId=` | List tokens, optionally by chain |
-| `GET` | `/blockchains/pools?chainId=&dex=` | List pools for a chain |
+Swagger UI is served at `/swagger/` and the raw spec at `/swagger/doc.json`.
 
-`POST /quotes` takes:
+Regenerate the spec after changing any handler annotation:
 
-```json
-{
-  "amount": "1.5",
-  "chain": "ethereum",
-  "chainId": 1,
-  "tokenIn": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-  "tokenOut": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-  "recipientAddress": "0x..."
-}
+```sh
+go generate ./...
 ```
-
-Quotes carry a 5-minute deadline and are persisted with a `pending` status.
 
 ## Adding a chain
 
