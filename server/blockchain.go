@@ -15,6 +15,16 @@ type chainHandler struct {
 	chainRepo uatu.ChainRepository
 }
 
+// GetBlockchains lists every chain in the catalogue.
+//
+// @Summary List supported blockchains
+// @Description Returns every chain the catalogue knows about, each with its embedded
+// @Description token and DEX definitions.
+// @Tags catalogue
+// @Produce json
+// @Success 200 {object} APIResponse{data=[]uatu.Chain}
+// @Failure 500 {object} APIResponse
+// @Router /blockchains [get]
 func (c *chainHandler) GetBlockchains(
 	ctx context.Context,
 	span trace.Span,
@@ -32,6 +42,17 @@ func (c *chainHandler) GetBlockchains(
 	return newAPIResponse(http.StatusOK, "Blockchains fetched successfully", chains), nil
 }
 
+// GetTokens lists known tokens, optionally narrowed to one chain.
+//
+// @Summary List tokens
+// @Description Returns the known tokens. Omit chainId to list tokens across every chain.
+// @Tags catalogue
+// @Produce json
+// @Param chainId query int false "restrict results to this EVM chain ID"
+// @Success 200 {object} APIResponse{data=[]uatu.Token}
+// @Failure 400 {object} APIResponse
+// @Failure 500 {object} APIResponse
+// @Router /blockchains/tokens [get]
 func (c *chainHandler) GetTokens(
 	ctx context.Context,
 	span trace.Span,
@@ -61,6 +82,20 @@ func (c *chainHandler) GetTokens(
 	return newAPIResponse(http.StatusOK, "Tokens fetched successfully", tokens), nil
 }
 
+// GetPools lists the liquidity pools discovered for a chain.
+//
+// @Summary List pools for a chain
+// @Description Returns the liquidity pools discovered by the seeder for the given chain,
+// @Description optionally filtered to a single DEX. Unlike the token endpoint, chainId
+// @Description is required here.
+// @Tags catalogue
+// @Produce json
+// @Param chainId query int true "EVM chain ID"
+// @Param dex query string false "restrict results to this DEX slug"
+// @Success 200 {object} APIResponse{data=[]uatu.Pool}
+// @Failure 400 {object} APIResponse
+// @Failure 500 {object} APIResponse
+// @Router /blockchains/pools [get]
 func (c *chainHandler) GetPools(
 	ctx context.Context,
 	span trace.Span,

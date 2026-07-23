@@ -30,14 +30,17 @@ type quoteHandler struct {
 	chainRepo uatu.ChainRepository
 }
 
+// quoteRequest is the body accepted by POST /quotes. Amounts are given in
+// human units (not base units); token fields take checksummed or lowercase
+// EVM addresses.
 type quoteRequest struct {
-	GenericRequest
-	Amount           decimal.Decimal `json:"amount" validate:"required"`
+	Amount           decimal.Decimal `json:"amount" validate:"required" swaggertype:"string"`
 	Chain            string          `json:"chain" validate:"required"`
 	ChainID          uint            `json:"chainId" validate:"required"`
 	RecipientAddress string          `json:"recipientAddress" validate:"required"`
 	TokenIn          string          `json:"tokenIn" validate:"required"`
 	TokenOut         string          `json:"tokenOut" validate:"required"`
+	GenericRequest
 }
 
 func newQuoteID() string {
@@ -50,6 +53,22 @@ func Deadline() *big.Int {
 	return big.NewInt(time.Now().Add(quoteTTL).Unix())
 }
 
+// CreateQuote prices a swap across every known pool for the pair and returns
+// the best route.
+//
+// @Summary Create a swap quote
+// @Description Resolves the pools for a token pair on the given chain, prices the swap against
+// @Description each DEX's on-chain contracts concurrently, and returns the best output together
+// @Description with the encoded Permit2 approval and swap calldata needed to execute it.
+// @Description Quotes carry a 5-minute deadline and are persisted with a pending status.
+// @Tags quotes
+// @Accept json
+// @Produce json
+// @Param message body quoteRequest true "request body to create a swap quote"
+// @Success 200 {object} APIResponse{data=uatu.Quote}
+// @Failure 400 {object} APIResponse
+// @Failure 500 {object} APIResponse
+// @Router /quotes [post]
 func (q *quoteHandler) CreateQuote(
 	ctx context.Context,
 	span trace.Span,

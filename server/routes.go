@@ -5,8 +5,10 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"github.com/uatu"
 	"github.com/uatu/config"
+	_ "github.com/uatu/swagger"
 	"go.uber.org/zap"
 )
 
@@ -38,6 +40,14 @@ func (s *Server) Run() error {
 
 	r.Route("/quotes", s.quoteRoutes)
 	r.Route("/blockchains", s.chainRoutes)
+
+	// Serves the UI at /swagger/index.html and the spec at /swagger/doc.json.
+	// The wildcard does not match a bare /swagger, so redirect that explicitly
+	// rather than letting the obvious URL 404.
+	r.Get("/swagger", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/swagger/index.html", http.StatusMovedPermanently)
+	})
+	r.Get("/swagger/*", httpSwagger.WrapHandler)
 
 	addr := ":" + s.cfg.PORT
 	s.logger.Info("Listening on port", zap.String("port", addr))
