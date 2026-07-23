@@ -1,0 +1,525 @@
+{
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "DEX aggregation and swap-quote API for EVM chains.\nMaintains a catalogue of blockchains, tokens, DEXes and liquidity\npools, and serves executable swap quotes built from on-chain AMM data.",
+        "title": "uatu API",
+        "contact": {},
+        "version": "0.1.0"
+    },
+    "basePath": "/",
+    "paths": {
+        "/blockchains": {
+            "get": {
+                "description": "Returns every chain the catalogue knows about, each with its embedded\ntoken and DEX definitions.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "catalogue"
+                ],
+                "summary": "List supported blockchains",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/server.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/uatu.Chain"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/server.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/blockchains/pools": {
+            "get": {
+                "description": "Returns the liquidity pools discovered by the seeder for the given chain,\noptionally filtered to a single DEX. Unlike the token endpoint, chainId\nis required here.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "catalogue"
+                ],
+                "summary": "List pools for a chain",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "EVM chain ID",
+                        "name": "chainId",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "restrict results to this DEX slug",
+                        "name": "dex",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/server.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/uatu.Pool"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/server.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/server.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/blockchains/tokens": {
+            "get": {
+                "description": "Returns the known tokens. Omit chainId to list tokens across every chain.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "catalogue"
+                ],
+                "summary": "List tokens",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "restrict results to this EVM chain ID",
+                        "name": "chainId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/server.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/uatu.Token"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/server.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/server.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/quotes": {
+            "post": {
+                "description": "Resolves the pools for a token pair on the given chain, prices the swap against\neach DEX's on-chain contracts concurrently, and returns the best output together\nwith the encoded Permit2 approval and swap calldata needed to execute it.\nQuotes carry a 5-minute deadline and are persisted with a pending status.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quotes"
+                ],
+                "summary": "Create a swap quote",
+                "parameters": [
+                    {
+                        "description": "request body to create a swap quote",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/server.quoteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/server.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/uatu.Quote"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/server.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/server.APIResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "server.APIResponse": {
+            "type": "object",
+            "required": [
+                "message"
+            ],
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "server.quoteRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "chain",
+                "chainId",
+                "recipientAddress",
+                "tokenIn",
+                "tokenOut"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "string"
+                },
+                "chain": {
+                    "type": "string"
+                },
+                "chainId": {
+                    "type": "integer"
+                },
+                "recipientAddress": {
+                    "type": "string"
+                },
+                "tokenIn": {
+                    "type": "string"
+                },
+                "tokenOut": {
+                    "type": "string"
+                }
+            }
+        },
+        "uatu.Actions": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "string"
+                },
+                "chainId": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "string"
+                },
+                "from": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "spender": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
+        "uatu.Chain": {
+            "type": "object",
+            "properties": {
+                "blockExplorer": {
+                    "type": "string"
+                },
+                "chainId": {
+                    "type": "integer"
+                },
+                "dex": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/uatu.Dex"
+                    }
+                },
+                "ecosystem": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "nativeToken": {
+                    "type": "string"
+                },
+                "rpcUrl": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "symbol": {
+                    "type": "string"
+                },
+                "tokens": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/uatu.Token"
+                    }
+                }
+            }
+        },
+        "uatu.Dex": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "permit2Address": {
+                    "type": "string"
+                },
+                "settlementAddress": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "universalRouterAddress": {
+                    "type": "string"
+                },
+                "v2FactoryAddress": {
+                    "type": "string"
+                },
+                "v2RouterAddress": {
+                    "type": "string"
+                },
+                "v3FactoryAddress": {
+                    "type": "string"
+                },
+                "v3QuoterAddress": {
+                    "type": "string"
+                },
+                "v3RouterAddress": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "uatu.Pool": {
+            "type": "object",
+            "properties": {
+                "baseToken": {
+                    "$ref": "#/definitions/uatu.Token"
+                },
+                "baseTokenAddress": {
+                    "type": "string"
+                },
+                "dexName": {
+                    "type": "string"
+                },
+                "marketCap": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pairAddress": {
+                    "type": "string"
+                },
+                "poolFee": {
+                    "type": "integer"
+                },
+                "poolType": {
+                    "type": "string"
+                },
+                "quoteToken": {
+                    "$ref": "#/definitions/uatu.Token"
+                },
+                "quoteTokenAddress": {
+                    "type": "string"
+                },
+                "symbol": {
+                    "type": "string"
+                },
+                "tickSpacing": {
+                    "type": "integer"
+                }
+            }
+        },
+        "uatu.Quote": {
+            "type": "object",
+            "properties": {
+                "amountIn": {
+                    "type": "string"
+                },
+                "amountInFloat": {
+                    "type": "string"
+                },
+                "amountOut": {
+                    "type": "string"
+                },
+                "amountOutFloat": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deadline": {
+                    "type": "integer"
+                },
+                "destinationChain": {
+                    "type": "string"
+                },
+                "destinationChainId": {
+                    "type": "integer"
+                },
+                "explorerUrl": {
+                    "type": "string"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "originChain": {
+                    "type": "string"
+                },
+                "originChainId": {
+                    "type": "integer"
+                },
+                "quoteId": {
+                    "type": "string"
+                },
+                "recipientAddress": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "pending",
+                        "completed",
+                        "failed"
+                    ]
+                },
+                "steps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/uatu.Actions"
+                    }
+                },
+                "tokenIn": {
+                    "$ref": "#/definitions/uatu.Token"
+                },
+                "tokenOut": {
+                    "$ref": "#/definitions/uatu.Token"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "walletAddress": {
+                    "type": "string"
+                }
+            }
+        },
+        "uatu.Token": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "blockchainId": {
+                    "type": "integer"
+                },
+                "decimals": {
+                    "type": "integer"
+                },
+                "logo": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "symbol": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,349 @@
+basePath: /
+definitions:
+  server.APIResponse:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+    required:
+    - message
+    type: object
+  server.quoteRequest:
+    properties:
+      amount:
+        type: string
+      chain:
+        type: string
+      chainId:
+        type: integer
+      recipientAddress:
+        type: string
+      tokenIn:
+        type: string
+      tokenOut:
+        type: string
+    required:
+    - amount
+    - chain
+    - chainId
+    - recipientAddress
+    - tokenIn
+    - tokenOut
+    type: object
+  uatu.Actions:
+    properties:
+      amount:
+        type: string
+      chainId:
+        type: integer
+      data:
+        type: string
+      from:
+        type: string
+      message:
+        type: string
+      spender:
+        type: string
+      to:
+        type: string
+    type: object
+  uatu.Chain:
+    properties:
+      blockExplorer:
+        type: string
+      chainId:
+        type: integer
+      dex:
+        items:
+          $ref: '#/definitions/uatu.Dex'
+        type: array
+      ecosystem:
+        type: string
+      name:
+        type: string
+      nativeToken:
+        type: string
+      rpcUrl:
+        type: string
+      slug:
+        type: string
+      symbol:
+        type: string
+      tokens:
+        items:
+          $ref: '#/definitions/uatu.Token'
+        type: array
+    type: object
+  uatu.Dex:
+    properties:
+      name:
+        type: string
+      permit2Address:
+        type: string
+      settlementAddress:
+        type: string
+      slug:
+        type: string
+      universalRouterAddress:
+        type: string
+      v2FactoryAddress:
+        type: string
+      v2RouterAddress:
+        type: string
+      v3FactoryAddress:
+        type: string
+      v3QuoterAddress:
+        type: string
+      v3RouterAddress:
+        type: string
+      version:
+        type: string
+    type: object
+  uatu.Pool:
+    properties:
+      baseToken:
+        $ref: '#/definitions/uatu.Token'
+      baseTokenAddress:
+        type: string
+      dexName:
+        type: string
+      marketCap:
+        type: string
+      name:
+        type: string
+      pairAddress:
+        type: string
+      poolFee:
+        type: integer
+      poolType:
+        type: string
+      quoteToken:
+        $ref: '#/definitions/uatu.Token'
+      quoteTokenAddress:
+        type: string
+      symbol:
+        type: string
+      tickSpacing:
+        type: integer
+    type: object
+  uatu.Quote:
+    properties:
+      amountIn:
+        type: string
+      amountInFloat:
+        type: string
+      amountOut:
+        type: string
+      amountOutFloat:
+        type: string
+      createdAt:
+        type: string
+      deadline:
+        type: integer
+      destinationChain:
+        type: string
+      destinationChainId:
+        type: integer
+      explorerUrl:
+        type: string
+      hash:
+        type: string
+      originChain:
+        type: string
+      originChainId:
+        type: integer
+      quoteId:
+        type: string
+      recipientAddress:
+        type: string
+      status:
+        enum:
+        - pending
+        - completed
+        - failed
+        type: string
+      steps:
+        items:
+          $ref: '#/definitions/uatu.Actions'
+        type: array
+      tokenIn:
+        $ref: '#/definitions/uatu.Token'
+      tokenOut:
+        $ref: '#/definitions/uatu.Token'
+      updatedAt:
+        type: string
+      walletAddress:
+        type: string
+    type: object
+  uatu.Token:
+    properties:
+      address:
+        type: string
+      blockchainId:
+        type: integer
+      decimals:
+        type: integer
+      logo:
+        type: string
+      name:
+        type: string
+      slug:
+        type: string
+      symbol:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: |-
+    DEX aggregation and swap-quote API for EVM chains.
+    Maintains a catalogue of blockchains, tokens, DEXes and liquidity
+    pools, and serves executable swap quotes built from on-chain AMM data.
+  title: uatu API
+  version: 0.1.0
+paths:
+  /blockchains:
+    get:
+      description: |-
+        Returns every chain the catalogue knows about, each with its embedded
+        token and DEX definitions.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/server.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/uatu.Chain'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/server.APIResponse'
+      summary: List supported blockchains
+      tags:
+      - catalogue
+  /blockchains/pools:
+    get:
+      description: |-
+        Returns the liquidity pools discovered by the seeder for the given chain,
+        optionally filtered to a single DEX. Unlike the token endpoint, chainId
+        is required here.
+      parameters:
+      - description: EVM chain ID
+        in: query
+        name: chainId
+        required: true
+        type: integer
+      - description: restrict results to this DEX slug
+        in: query
+        name: dex
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/server.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/uatu.Pool'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/server.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/server.APIResponse'
+      summary: List pools for a chain
+      tags:
+      - catalogue
+  /blockchains/tokens:
+    get:
+      description: Returns the known tokens. Omit chainId to list tokens across every
+        chain.
+      parameters:
+      - description: restrict results to this EVM chain ID
+        in: query
+        name: chainId
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/server.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/uatu.Token'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/server.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/server.APIResponse'
+      summary: List tokens
+      tags:
+      - catalogue
+  /quotes:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Resolves the pools for a token pair on the given chain, prices the swap against
+        each DEX's on-chain contracts concurrently, and returns the best output together
+        with the encoded Permit2 approval and swap calldata needed to execute it.
+        Quotes carry a 5-minute deadline and are persisted with a pending status.
+      parameters:
+      - description: request body to create a swap quote
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/server.quoteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/server.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/uatu.Quote'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/server.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/server.APIResponse'
+      summary: Create a swap quote
+      tags:
+      - quotes
+schemes:
+- http
+- https
+swagger: "2.0"
