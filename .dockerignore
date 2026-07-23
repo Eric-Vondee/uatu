@@ -1,0 +1,25 @@
+# Secrets — config is supplied through the environment in a container.
+.env
+.env*
+
+# VCS, tooling and editor state.
+.git
+.github
+.gitignore
+.claude
+.idea
+.vscode
+.DS_Store
+
+# Local build and dev-loop artefacts.
+bin/
+tmp/
+.air.toml
+
+# Not needed to compile.
+Dockerfile
+.dockerignore
+nixpacks.toml
+Makefile
+README.md
+*.abi
