@@ -11,6 +11,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
+//go:embed internal/blockchains/*.json
 var files embed.FS
 
 type Token struct {
@@ -62,15 +63,18 @@ type ChainRepository interface {
 	GetDex(ctx context.Context, opts QueryOptions) (Dex, error)
 }
 
+// blockchainsDir is the embedded directory holding one JSON file per chain.
+const blockchainsDir = "internal/blockchains"
+
 // Load parses every embedded chain definition.
 func Load() ([]Chain, error) {
-	entries, err := files.ReadDir(".")
+	entries, err := files.ReadDir(blockchainsDir)
 	if err != nil {
 		return nil, err
 	}
 	chains := make([]Chain, 0, len(entries))
 	for _, entry := range entries {
-		data, err := files.ReadFile(entry.Name())
+		data, err := files.ReadFile(blockchainsDir + "/" + entry.Name())
 		if err != nil {
 			return nil, err
 		}
