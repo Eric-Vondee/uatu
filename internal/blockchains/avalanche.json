@@ -66,13 +66,13 @@
   "dex": [
     {
       "name": "Uniswap",
-      "v2RouterAddress":"0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24",
+      "v2RouterAddress": "0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24",
       "v2FactoryAddress": "0x9e5A52f57b3038F1B8EeE45F28b3C1967e22799C",
       "v3QuoterAddress": "0xbe0F5544EC67e9B3b2D979aaA43f18Fd87E6257F",
       "v3FactoryAddress": "0x740b1c1de25031C31FF4fC9A62f554A55cdC1baD",
       "v3RouterAddress": "0xbb00FF08d01D300023C629E8fFfFcb65A5a578cE",
       "permit2Address": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
-      "universalRouterAddress": "0x8B844f885672f333Bc0042cB669255f93a4C1E6b",
+      "universalRouterAddress": "0x94b75331ae8d42c1b61065089b7d48fe14aa73b7",
       "slug": "uniswap"
     },
     {

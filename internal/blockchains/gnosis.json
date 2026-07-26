@@ -4,7 +4,7 @@
   "chainId": 100,
   "blockExplorer": "https://gnosisscan.io",
   "rpcUrl": "https://rpc.gnosischain.com",
-  "nativeToken": "GNO",
+  "nativeToken": "XDAI",
   "tokens": [
     {
       "name": "Gnosis",

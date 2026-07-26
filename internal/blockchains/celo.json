@@ -56,7 +56,7 @@
       "v3RouterAddress": "0x5615CDAb10dc425a742d643d949a7F474C01abc4",
       "v3QuoterAddress": "0x82825d0554fA07f7FC52Ab63c961F330fdEFa8E8",
       "permit2Address": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
-      "universalRouterAddress": "0x8B844f885672f333Bc0042cB669255f93a4C1E6b",
+      "universalRouterAddress": "0x643770E279d5D0733F21d6DC03A8efbABf3255B4",
       "slug": "uniswap"
     }
   ],
