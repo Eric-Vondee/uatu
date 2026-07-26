@@ -124,7 +124,7 @@ func (q *quoteHandler) CreateQuote(
 	if err != nil {
 		logger.Error("Failed to get best route", zap.Error(err))
 		return APIError{
-			newAPIResponse(http.StatusInternalServerError, "an error occurred fetching quote", nil),
+			newAPIResponse(http.StatusInternalServerError, err.Error(), nil),
 		}, err
 	}
 
@@ -149,24 +149,36 @@ func newQuote(
 ) (*uatu.Quote, error) {
 	quoteID := newQuoteID()
 	deadline := Deadline()
-	steps := []uatu.Actions{
-		{
-			Message: "Permit2 Token Approval",
-			Amount:  res.AmountIn.String(),
-			From:    walletAddress.String(),
-			To:      res.Dex.Permit2Address,
-			Data:    uatu.HexBytes(res.EncodedTokenApproval),
+	amountIn := res.AmountIn.String()
+	wallet := walletAddress.String()
+
+	step := func(msg, to string, data []byte) uatu.Actions {
+		return uatu.Actions{
+			Message: msg,
+			Amount:  amountIn,
+			From:    wallet,
+			To:      to,
+			Data:    uatu.HexBytes(data),
 			ChainID: chain.ChainID,
-		},
-		{
-			Message: fmt.Sprintf("Swap %s to %s", tokenIn.Symbol, tokenOut.Symbol),
-			Amount:  res.AmountIn.String(),
-			From:    walletAddress.String(),
-			To:      res.Dex.UniversalRouterAddress,
-			Data:    uatu.HexBytes(res.EncodedData),
-			ChainID: chain.ChainID,
-		},
+		}
 	}
+
+	steps := make([]uatu.Actions, 0, 3)
+	if len(res.EncodedERC20Approval) != 0 {
+		msg := fmt.Sprintf("%s token approval", tokenIn.Symbol)
+		steps = append(steps, step(msg, tokenIn.Address, res.EncodedERC20Approval))
+	}
+
+	if len(res.EncodedPermit2Approval) != 0 {
+		msg := "Permit2 approval"
+		steps = append(steps, step(msg, res.Dex.Permit2Address, res.EncodedPermit2Approval))
+	}
+
+	steps = append(steps, step(
+		fmt.Sprintf("Swap %s to %s", tokenIn.Symbol, tokenOut.Symbol),
+		res.Dex.UniversalRouterAddress,
+		res.EncodedData,
+	))
 	quote := uatu.Quote{
 		QuoteId:            quoteID,
 		AmountIn:           res.AmountIn.String(),
@@ -285,7 +297,6 @@ func (q *quoteHandler) getBestOutput(
 			best = r.response
 		}
 	}
-
 	if best == nil {
 		if lastErr != nil {
 			return nil, fmt.Errorf("no supported route found: %w", lastErr)
