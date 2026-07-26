@@ -235,20 +235,36 @@ func (c *Client) GetV3AmountOut(amountIn *big.Int, quoter, tokenIn, tokenOut com
 	return amountOut, nil
 }
 
-var erc20ApproveABI = func() abi.ABI {
-	parsed, err := abi.JSON(strings.NewReader(`[{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}]`))
+var erc20ABI = func() abi.ABI {
+	parsed, err := abi.JSON(strings.NewReader(`[{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]`))
 	if err != nil {
 		panic(err)
 	}
 	return parsed
 }()
 
-func EncodeTokenApproval(amount *big.Int, spender string) ([]byte, error) {
-	encoded, err := erc20ApproveABI.Pack("approve", uatu.FormatEvmAddress(spender), amount)
+func EncodeERC20Token(amount *big.Int, spender common.Address) ([]byte, error) {
+	encoded, err := erc20ABI.Pack("approve", spender, amount)
 	if err != nil {
 		return nil, fmt.Errorf("could not encode approve calldata: %w", err)
 	}
 	return encoded, nil
+}
+
+func (c *Client) GetERC20Allowance(
+	ctx context.Context,
+	token, owner, spender common.Address,
+) (*big.Int, error) {
+	contract := bind.NewBoundContract(token, erc20ABI, c.client, nil, nil)
+	var out []interface{}
+	if err := contract.Call(&bind.CallOpts{Context: ctx}, &out, "allowance", owner, spender); err != nil {
+		return nil, fmt.Errorf("could not get erc20 allowance: %w", err)
+	}
+	allowance, ok := out[0].(*big.Int)
+	if !ok {
+		return nil, fmt.Errorf("unexpected erc20 allowance type %T", out[0])
+	}
+	return allowance, nil
 }
 
 func EncodePermit2Approval(token, spender common.Address, amount, expiration *big.Int) ([]byte, error) {
@@ -362,7 +378,7 @@ func (c *Client) BuyV2(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespo
 	permit2Address := uatu.FormatEvmAddress(d.Dex.Permit2Address)
 	universalRouterAddress := uatu.FormatEvmAddress(d.Dex.UniversalRouterAddress)
 	tokenIn := d.TokenIn
-	allowance, err := c.GetPermit2TokenAllowance(
+	permit2Allowance, err := c.GetPermit2TokenAllowance(
 		ctx,
 		permit2Address,
 		d.WalletAddress, d.TokenIn,
@@ -371,16 +387,33 @@ func (c *Client) BuyV2(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespo
 	if err != nil {
 		return nil, err
 	}
+	erc20Allowance, err := c.GetERC20Allowance(
+		ctx,
+		tokenIn,
+		d.WalletAddress,
+		permit2Address,
+	)
+	if err != nil {
+		return nil, err
+	}
 	now := big.NewInt(time.Now().Unix())
 	deadline := big.NewInt(time.Now().Add(swapDeadline).Unix())
-	var encodedPermit2Approval []byte
-	if allowance.Expiration.Cmp(now) <= 0 || allowance.Amount.Cmp(d.AmountIn) < 0 {
+	var encodedPermit2Approval, enodedERC20TokenApproval []byte
+
+	if permit2Allowance.Expiration.Cmp(now) <= 0 || permit2Allowance.Amount.Cmp(d.AmountIn) < 0 {
 		expiration := big.NewInt(time.Now().Add(permit2ApprovalDuration).Unix())
 		encodedPermit2Approval, err = EncodePermit2Approval(tokenIn, universalRouterAddress, maxUint160, expiration)
 		if err != nil {
 			return nil, err
 		}
 	}
+	if erc20Allowance.Cmp(d.AmountIn) <= 0 {
+		enodedERC20TokenApproval, err = EncodeERC20Token(d.AmountIn, permit2Address)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	pool, err := c.GetV2Pool(d.PairAddress)
 	if err != nil {
 		return nil, err
@@ -413,11 +446,12 @@ func (c *Client) BuyV2(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespo
 		return nil, err
 	}
 	return &uatu.IDexResponse{
-		AmountIn:             d.AmountIn,
-		AmountOut:            amountOut,
-		EncodedData:          swapCalldata,
-		EncodedTokenApproval: encodedPermit2Approval,
-		Dex:                  d.Dex,
+		AmountIn:               d.AmountIn,
+		AmountOut:              amountOut,
+		EncodedData:            swapCalldata,
+		EncodedERC20Approval:   enodedERC20TokenApproval,
+		EncodedPermit2Approval: encodedPermit2Approval,
+		Dex:                    d.Dex,
 	}, nil
 }
 
@@ -426,7 +460,7 @@ func (c *Client) BuyV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespo
 	universalRouterAddress := uatu.FormatEvmAddress(d.Dex.UniversalRouterAddress)
 	permit2Address := uatu.FormatEvmAddress(d.Dex.Permit2Address)
 	quoterAddress := uatu.FormatEvmAddress(d.Dex.V3QuoterAddress)
-	allowance, err := c.GetPermit2TokenAllowance(
+	permit2Allowance, err := c.GetPermit2TokenAllowance(
 		ctx,
 		permit2Address,
 		d.WalletAddress, d.TokenIn,
@@ -435,12 +469,28 @@ func (c *Client) BuyV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespo
 	if err != nil {
 		return nil, err
 	}
+	erc20Allowance, err := c.GetERC20Allowance(
+		ctx,
+		tokenIn,
+		d.WalletAddress,
+		permit2Address,
+	)
+	if err != nil {
+		return nil, err
+	}
 	now := big.NewInt(time.Now().Unix())
 	deadline := big.NewInt(time.Now().Add(swapDeadline).Unix())
-	var encodedPermit2Approval []byte
-	if allowance.Expiration.Cmp(now) <= 0 || allowance.Amount.Cmp(d.AmountIn) < 0 {
+	var encodedPermit2Approval, enodedERC20TokenApproval []byte
+
+	if permit2Allowance.Expiration.Cmp(now) <= 0 || permit2Allowance.Amount.Cmp(d.AmountIn) < 0 {
 		expiration := big.NewInt(time.Now().Add(permit2ApprovalDuration).Unix())
 		encodedPermit2Approval, err = EncodePermit2Approval(tokenIn, universalRouterAddress, maxUint160, expiration)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if erc20Allowance.Cmp(d.AmountIn) <= 0 {
+		enodedERC20TokenApproval, err = EncodeERC20Token(d.AmountIn, permit2Address)
 		if err != nil {
 			return nil, err
 		}
@@ -472,10 +522,11 @@ func (c *Client) BuyV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespo
 		return nil, err
 	}
 	return &uatu.IDexResponse{
-		AmountIn:             d.AmountIn,
-		AmountOut:            amountOut,
-		EncodedData:          swapCalldata,
-		EncodedTokenApproval: encodedPermit2Approval,
-		Dex:                  d.Dex,
+		AmountIn:               d.AmountIn,
+		AmountOut:              amountOut,
+		EncodedData:            swapCalldata,
+		EncodedERC20Approval:   enodedERC20TokenApproval,
+		EncodedPermit2Approval: encodedPermit2Approval,
+		Dex:                    d.Dex,
 	}, nil
 }
