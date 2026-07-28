@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/big"
 	"strings"
 	"sync"
 
@@ -57,7 +58,7 @@ func getPools(client *dex.Client, chain uatu.Chain) []uatu.Pool {
 				continue
 			}
 			for _, d := range chain.Dex {
-				if d.Slug != "uniswap" && d.Slug != "pancakeswap" {
+				if d.Slug == "cowswap" {
 					continue
 				}
 				jobs = append(jobs, poolJob{tokenIn: tokenIn, tokenOut: tokenOut, d: d})
@@ -90,34 +91,79 @@ func getPools(client *dex.Client, chain uatu.Chain) []uatu.Pool {
 	return pools
 }
 
+// clPair is a concentrated-liquidity pair normalised across dexes. Uniswap and
+// pancakeswap key their pools by fee tier, aerodrome by tick spacing, so either
+// field may be unset depending on which factory answered.
+type clPair struct {
+	address     common.Address
+	fee         *big.Int
+	tickSpacing *big.Int
+}
+
 // lookupPools resolves one token pair against one dex's v2 and v3 factories.
 func lookupPools(client *dex.Client, chain uatu.Chain, j poolJob) []uatu.Pool {
 	pools := make([]uatu.Pool, 0, 2)
 	if j.d.V2FactoryAddress != "" {
-		pair, err := client.GetV2Pair(j.d.V2FactoryAddress, j.tokenIn.Address, j.tokenOut.Address)
+		factoryAddress := uatu.FormatEvmAddress(j.d.V2FactoryAddress)
+		tokenIn := uatu.FormatEvmAddress(j.tokenIn.Address)
+		tokenOut := uatu.FormatEvmAddress(j.tokenOut.Address)
+		pair, err := client.GetV2Pair(factoryAddress, tokenIn, tokenOut)
 		if err != nil {
 			log.Printf("%s %s: v2 pair %s/%s: %v", chain.Slug, j.d.Slug, j.tokenIn.Symbol, j.tokenOut.Symbol, err)
 		} else if pair != (common.Address{}) {
-			pool := newPool(chain, j.d, j.tokenIn, j.tokenOut, pair.Hex(), "v2", 300)
+			pool := newPool(chain, j.d, j.tokenIn, j.tokenOut, pair.Hex(), "v2", 300, 0)
 			pools = append(pools, pool)
 		}
 	}
 	if j.d.V3FactoryAddress != "" {
-		v3Pairs, err := client.GetV3Pair(
-			uatu.FormatEvmAddress(j.d.V3FactoryAddress),
-			uatu.FormatEvmAddress(j.tokenIn.Address),
-			uatu.FormatEvmAddress(j.tokenOut.Address),
+		factoryAddress := uatu.FormatEvmAddress(j.d.V3FactoryAddress)
+		tokenIn := uatu.FormatEvmAddress(j.tokenIn.Address)
+		tokenOut := uatu.FormatEvmAddress(j.tokenOut.Address)
+		var (
+			pairs []clPair
+			err   error
 		)
+		switch j.d.Slug {
+		case "uniswap", "pancakeswap", "oku":
+			var found []dex.V3Pair
+			found, err = client.GetV3Pair(factoryAddress, tokenIn, tokenOut)
+			for _, p := range found {
+				pairs = append(pairs, clPair{address: p.PairAddress, fee: p.Fee})
+			}
+		case "aerodrome":
+			var found []dex.AerodromePair
+			found, err = client.GetAerodromePair(factoryAddress, tokenIn, tokenOut)
+			for _, p := range found {
+				pairs = append(pairs, clPair{
+					address:     p.PairAddress,
+					fee:         p.Fee,
+					tickSpacing: p.TickSpacing,
+				})
+			}
+		default:
+			log.Printf("%s: no v3 factory lookup for dex %s", chain.Slug, j.d.Slug)
+			return pools
+		}
 		if err != nil {
 			log.Printf("%s %s: v3 pools %s/%s: %v", chain.Slug, j.d.Slug, j.tokenIn.Symbol, j.tokenOut.Symbol, err)
 			return pools
 		}
-		for _, p := range v3Pairs {
-			pool := newPool(chain, j.d, j.tokenIn, j.tokenOut, p.PairAddress.Hex(), "v3", uint(p.Fee.Uint64()))
+		for _, p := range pairs {
+			pool := newPool(
+				chain, j.d, j.tokenIn, j.tokenOut, p.address.Hex(), "v3",
+				bigToUint(p.fee), bigToUint(p.tickSpacing),
+			)
 			pools = append(pools, pool)
 		}
 	}
 	return pools
+}
+
+func bigToUint(v *big.Int) uint {
+	if v == nil {
+		return 0
+	}
+	return uint(v.Uint64())
 }
 
 func newPool(
@@ -125,7 +171,7 @@ func newPool(
 	d uatu.Dex,
 	base, quote uatu.Token,
 	address, poolType string,
-	fee uint,
+	fee, tickSpacing uint,
 ) uatu.Pool {
 	return uatu.Pool{
 		Name:              fmt.Sprintf("%s %s/%s", d.Name, base.Symbol, quote.Symbol),
@@ -139,6 +185,7 @@ func newPool(
 		ChainID:           chain.ChainID,
 		PoolFee:           fee,
 		PoolType:          poolType,
+		TickSpacing:       tickSpacing,
 	}
 }
 
