@@ -42,4 +42,5 @@ type IDexResponse struct {
 	AmountIn, AmountOut                                       *big.Int
 	EncodedData, EncodedERC20Approval, EncodedPermit2Approval []byte
 	Dex                                                       Dex
+	RouterAddress                                             string
 }
