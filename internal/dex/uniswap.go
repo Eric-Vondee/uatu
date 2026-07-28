@@ -10,7 +10,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/uatu"
 	"github.com/uatu/internal/contracts"
 )
@@ -21,10 +20,6 @@ const (
 	V2_SWAP Command = "0x08"
 	V3_SWAP Command = "0x00"
 )
-
-type Client struct {
-	client *ethclient.Client
-}
 
 type V2Pool struct {
 	Token0   common.Address
@@ -57,23 +52,12 @@ type V3Pair struct {
 	Fee         *big.Int
 }
 
-func Provider(rpcUrl string) (*Client, error) {
-	client, err := ethclient.Dial(rpcUrl)
-	if err != nil {
-		return nil, fmt.Errorf("could not create eth client: %w", err)
-	}
-	return &Client{client: client}, nil
-}
-
-func (c *Client) GetV2Pair(address, token0, token1 string) (common.Address, error) {
-	factoryAddress := uatu.FormatEvmAddress(address)
-	token0Address := uatu.FormatEvmAddress(token0)
-	token1Address := uatu.FormatEvmAddress(token1)
-	factoryContract, err := contracts.NewV2FactoryCaller(factoryAddress, c.client)
+func (c *Client) GetV2Pair(address, token0, token1 common.Address) (common.Address, error) {
+	factoryContract, err := contracts.NewV2FactoryCaller(address, c.client)
 	if err != nil {
 		return common.Address{}, fmt.Errorf("could not bind v2 factory: %w", err)
 	}
-	pair, err := factoryContract.GetPair(&bind.CallOpts{}, token0Address, token1Address)
+	pair, err := factoryContract.GetPair(&bind.CallOpts{}, token0, token1)
 	if err != nil {
 		return common.Address{}, fmt.Errorf("could not get pair: %w", err)
 	}
@@ -168,50 +152,30 @@ func (c *Client) GetV3Pool(address common.Address) (*V3Pool, error) {
 	}, nil
 }
 
-type Permit2Allowance struct {
-	Amount     *big.Int
-	Expiration *big.Int
-	Nonce      *big.Int
-}
-
-func (c *Client) GetPermit2TokenAllowance(
+func (c *Client) getV2AmountOut(
 	ctx context.Context,
-	permit2Address, wallet, token, spender common.Address,
-) (*Permit2Allowance, error) {
-	contract, err := contracts.NewPermit2Caller(permit2Address, c.client)
-	if err != nil {
-		return nil, fmt.Errorf("could not bind permit2: %w", err)
-	}
-	allowance, err := contract.Allowance(
-		&bind.CallOpts{Context: ctx},
-		wallet,
-		token,
-		spender,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("could not get permit2 allowance: %w", err)
-	}
-	return &Permit2Allowance{
-		Amount:     allowance.Amount,
-		Expiration: allowance.Expiration,
-		Nonce:      allowance.Nonce,
-	}, nil
-}
-
-func (c *Client) GetV2AmountOut(amountIn, reserveIn, reserveOut *big.Int, router string) (*big.Int, error) {
-	routerAddress := uatu.FormatEvmAddress(router)
-	routerContract, err := contracts.NewV2RouterCaller(routerAddress, c.client)
+	amountIn, reserveIn, reserveOut *big.Int,
+	router common.Address,
+) (*big.Int, error) {
+	routerContract, err := contracts.NewV2RouterCaller(router, c.client)
 	if err != nil {
 		return nil, fmt.Errorf("could not bind router: %w", err)
 	}
-	amountOut, err := routerContract.GetAmountOut(&bind.CallOpts{}, amountIn, reserveIn, reserveOut)
+	amountOut, err := routerContract.GetAmountOut(
+		&bind.CallOpts{Context: ctx},
+		amountIn, reserveIn, reserveOut,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("could not get v2 amount out: %w", err)
 	}
 	return amountOut, nil
 }
 
-func (c *Client) GetV3AmountOut(amountIn *big.Int, quoter, tokenIn, tokenOut common.Address, fee *big.Int) (*big.Int, error) {
+func (c *Client) getV3AmountOut(
+	amountIn *big.Int,
+	quoter, tokenIn, tokenOut common.Address,
+	fee *big.Int,
+) (*big.Int, error) {
 	quoterContract, err := contracts.NewV3Quoter(quoter, c.client)
 	if err != nil {
 		return nil, fmt.Errorf("could not bind v3 quoter: %w", err)
@@ -233,50 +197,6 @@ func (c *Client) GetV3AmountOut(amountIn *big.Int, quoter, tokenIn, tokenOut com
 		return nil, fmt.Errorf("unexpected quoter amountOut type %T", out[0])
 	}
 	return amountOut, nil
-}
-
-var erc20ABI = func() abi.ABI {
-	parsed, err := abi.JSON(strings.NewReader(`[{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]`))
-	if err != nil {
-		panic(err)
-	}
-	return parsed
-}()
-
-func EncodeERC20Token(amount *big.Int, spender common.Address) ([]byte, error) {
-	encoded, err := erc20ABI.Pack("approve", spender, amount)
-	if err != nil {
-		return nil, fmt.Errorf("could not encode approve calldata: %w", err)
-	}
-	return encoded, nil
-}
-
-func (c *Client) GetERC20Allowance(
-	ctx context.Context,
-	token, owner, spender common.Address,
-) (*big.Int, error) {
-	contract := bind.NewBoundContract(token, erc20ABI, c.client, nil, nil)
-	var out []interface{}
-	if err := contract.Call(&bind.CallOpts{Context: ctx}, &out, "allowance", owner, spender); err != nil {
-		return nil, fmt.Errorf("could not get erc20 allowance: %w", err)
-	}
-	allowance, ok := out[0].(*big.Int)
-	if !ok {
-		return nil, fmt.Errorf("unexpected erc20 allowance type %T", out[0])
-	}
-	return allowance, nil
-}
-
-func EncodePermit2Approval(token, spender common.Address, amount, expiration *big.Int) ([]byte, error) {
-	permit2ABI, err := contracts.Permit2MetaData.GetAbi()
-	if err != nil {
-		return nil, fmt.Errorf("could not parse permit2 abi: %w", err)
-	}
-	calldata, err := permit2ABI.Pack("approve", token, spender, amount, expiration)
-	if err != nil {
-		return nil, fmt.Errorf("could not encode permit2 approve calldata: %w", err)
-	}
-	return calldata, nil
 }
 
 const (
@@ -313,7 +233,7 @@ var universalRouterABI = func() abi.ABI {
 
 // EncodeV2SwapExactIn encodes the V2_SWAP_EXACT_IN command input:
 // (recipient, amountIn, amountOutMin, path, payerIsUser).
-func EncodeV2SwapExactIn(
+func encodeV2SwapExactIn(
 	recipient common.Address,
 	amountIn, amountOutMin *big.Int,
 	path []common.Address,
@@ -334,7 +254,7 @@ var v3SwapExactInArgs = abi.Arguments{
 	{Type: mustABIType("bool")},
 }
 
-func EncodeV3SwapExactSingle(
+func encodeV3SwapExactSingle(
 	recipient common.Address,
 	amountIn, amountOutMin *big.Int,
 	tokenIn common.Address, fee *big.Int, tokenOut common.Address,
@@ -355,30 +275,23 @@ func EncodeV3SwapExactSingle(
 	return input, nil
 }
 
-func EncodeUniversalRouterExecute(cmd Command, input []byte, deadline *big.Int) ([]byte, error) {
-	calldata, err := universalRouterABI.Pack("execute", common.FromHex(string(cmd)), [][]byte{input}, deadline)
+func encodeUniversalRouterExecute(cmd Command, input []byte, deadline *big.Int) ([]byte, error) {
+	calldata, err := universalRouterABI.Pack("execute",
+		common.FromHex(string(cmd)),
+		[][]byte{input},
+		deadline,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("could not encode execute calldata: %w", err)
 	}
 	return calldata, nil
 }
 
-func (c *Client) Swap(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {
-	switch d.PoolType {
-	case "v2":
-		return c.BuyV2(ctx, d)
-	case "v3":
-		return c.BuyV3(ctx, d)
-	default:
-		return nil, fmt.Errorf("unsupported pool type: %s", d.PoolType)
-	}
-}
-
-func (c *Client) BuyV2(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {
+func (c *Client) swapV2(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {
 	permit2Address := uatu.FormatEvmAddress(d.Dex.Permit2Address)
 	universalRouterAddress := uatu.FormatEvmAddress(d.Dex.UniversalRouterAddress)
 	tokenIn := d.TokenIn
-	permit2Allowance, err := c.GetPermit2TokenAllowance(
+	permit2Allowance, err := c.getPermit2TokenAllowance(
 		ctx,
 		permit2Address,
 		d.WalletAddress, d.TokenIn,
@@ -387,7 +300,7 @@ func (c *Client) BuyV2(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespo
 	if err != nil {
 		return nil, err
 	}
-	erc20Allowance, err := c.GetERC20Allowance(
+	erc20Allowance, err := c.getERC20Allowance(
 		ctx,
 		tokenIn,
 		d.WalletAddress,
@@ -402,13 +315,18 @@ func (c *Client) BuyV2(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespo
 
 	if permit2Allowance.Expiration.Cmp(now) <= 0 || permit2Allowance.Amount.Cmp(d.AmountIn) < 0 {
 		expiration := big.NewInt(time.Now().Add(permit2ApprovalDuration).Unix())
-		encodedPermit2Approval, err = EncodePermit2Approval(tokenIn, universalRouterAddress, maxUint160, expiration)
+		encodedPermit2Approval, err = encodePermit2Approval(
+			tokenIn,
+			universalRouterAddress,
+			maxUint160,
+			expiration,
+		)
 		if err != nil {
 			return nil, err
 		}
 	}
 	if erc20Allowance.Cmp(d.AmountIn) <= 0 {
-		enodedERC20TokenApproval, err = EncodeERC20Token(d.AmountIn, permit2Address)
+		enodedERC20TokenApproval, err = encodeERC20Token(d.AmountIn, permit2Address)
 		if err != nil {
 			return nil, err
 		}
@@ -425,12 +343,16 @@ func (c *Client) BuyV2(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespo
 	} else if tokenIn != pool.Token0 {
 		return nil, fmt.Errorf("token %s is not in pool %s", d.TokenIn, d.PairAddress)
 	}
-	amountOut, err := c.GetV2AmountOut(d.AmountIn, reserveIn, reserveOut, d.Dex.V2RouterAddress)
+	amountOut, err := c.getV2AmountOut(
+		ctx, d.AmountIn,
+		reserveIn, reserveOut,
+		uatu.FormatEvmAddress(d.Dex.V2RouterAddress),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	input, err := EncodeV2SwapExactIn(
+	input, err := encodeV2SwapExactIn(
 		d.WalletAddress,
 		d.AmountIn,
 		amountOut,
@@ -441,7 +363,7 @@ func (c *Client) BuyV2(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespo
 		return nil, err
 	}
 
-	swapCalldata, err := EncodeUniversalRouterExecute(V2_SWAP, input, deadline)
+	swapCalldata, err := encodeUniversalRouterExecute(V2_SWAP, input, deadline)
 	if err != nil {
 		return nil, err
 	}
@@ -452,15 +374,16 @@ func (c *Client) BuyV2(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespo
 		EncodedERC20Approval:   enodedERC20TokenApproval,
 		EncodedPermit2Approval: encodedPermit2Approval,
 		Dex:                    d.Dex,
+		RouterAddress:          d.Dex.UniversalRouterAddress,
 	}, nil
 }
 
-func (c *Client) BuyV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {
+func (c *Client) swapV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {
 	tokenIn := d.TokenIn
 	universalRouterAddress := uatu.FormatEvmAddress(d.Dex.UniversalRouterAddress)
 	permit2Address := uatu.FormatEvmAddress(d.Dex.Permit2Address)
 	quoterAddress := uatu.FormatEvmAddress(d.Dex.V3QuoterAddress)
-	permit2Allowance, err := c.GetPermit2TokenAllowance(
+	permit2Allowance, err := c.getPermit2TokenAllowance(
 		ctx,
 		permit2Address,
 		d.WalletAddress, d.TokenIn,
@@ -469,7 +392,7 @@ func (c *Client) BuyV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespo
 	if err != nil {
 		return nil, err
 	}
-	erc20Allowance, err := c.GetERC20Allowance(
+	erc20Allowance, err := c.getERC20Allowance(
 		ctx,
 		tokenIn,
 		d.WalletAddress,
@@ -484,13 +407,13 @@ func (c *Client) BuyV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespo
 
 	if permit2Allowance.Expiration.Cmp(now) <= 0 || permit2Allowance.Amount.Cmp(d.AmountIn) < 0 {
 		expiration := big.NewInt(time.Now().Add(permit2ApprovalDuration).Unix())
-		encodedPermit2Approval, err = EncodePermit2Approval(tokenIn, universalRouterAddress, maxUint160, expiration)
+		encodedPermit2Approval, err = encodePermit2Approval(tokenIn, universalRouterAddress, maxUint160, expiration)
 		if err != nil {
 			return nil, err
 		}
 	}
 	if erc20Allowance.Cmp(d.AmountIn) <= 0 {
-		enodedERC20TokenApproval, err = EncodeERC20Token(d.AmountIn, permit2Address)
+		enodedERC20TokenApproval, err = encodeERC20Token(d.AmountIn, permit2Address)
 		if err != nil {
 			return nil, err
 		}
@@ -502,12 +425,12 @@ func (c *Client) BuyV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespo
 	if tokenIn != pool.Token0 && tokenIn != pool.Token1 {
 		return nil, fmt.Errorf("token %s is not in pool %s", d.TokenIn, d.PairAddress)
 	}
-	amountOut, err := c.GetV3AmountOut(d.AmountIn, quoterAddress, tokenIn, d.TokenOut, pool.Fee)
+	amountOut, err := c.getV3AmountOut(d.AmountIn, quoterAddress, tokenIn, d.TokenOut, pool.Fee)
 	if err != nil {
 		return nil, err
 	}
 
-	input, err := EncodeV3SwapExactSingle(
+	input, err := encodeV3SwapExactSingle(
 		d.WalletAddress,
 		d.AmountIn,
 		amountOut,
@@ -517,7 +440,7 @@ func (c *Client) BuyV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespo
 	if err != nil {
 		return nil, err
 	}
-	swapCalldata, err := EncodeUniversalRouterExecute(V3_SWAP, input, deadline)
+	swapCalldata, err := encodeUniversalRouterExecute(V3_SWAP, input, deadline)
 	if err != nil {
 		return nil, err
 	}
@@ -528,5 +451,17 @@ func (c *Client) BuyV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespo
 		EncodedERC20Approval:   enodedERC20TokenApproval,
 		EncodedPermit2Approval: encodedPermit2Approval,
 		Dex:                    d.Dex,
+		RouterAddress:          d.Dex.UniversalRouterAddress,
 	}, nil
+}
+
+func (c *Client) Swap(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {
+	switch d.PoolType {
+	case "v2":
+		return c.swapV2(ctx, d)
+	case "v3":
+		return c.swapV3(ctx, d)
+	default:
+		return nil, fmt.Errorf("unsupported pool type: %s", d.PoolType)
+	}
 }

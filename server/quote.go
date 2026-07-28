@@ -176,7 +176,7 @@ func newQuote(
 
 	steps = append(steps, step(
 		fmt.Sprintf("Swap %s to %s", tokenIn.Symbol, tokenOut.Symbol),
-		res.Dex.UniversalRouterAddress,
+		res.RouterAddress,
 		res.EncodedData,
 	))
 	quote := uatu.Quote{
@@ -268,7 +268,14 @@ func (q *quoteHandler) getBestOutput(
 				output *uatu.IDexResponse
 				err    error
 			)
-			output, err = client.Swap(ctx, dexRequest)
+			switch pool.DexName {
+			case "uniswap":
+			case "pancakeswap":
+			case "oku":
+				output, err = client.Swap(ctx, dexRequest)
+			case "aerodrome":
+				output, err = client.SwapAerodrome(ctx, dexRequest)
+			}
 			results <- quoteResult{response: output, err: err}
 		}(pool, dexBySlug[pool.DexName])
 	}
