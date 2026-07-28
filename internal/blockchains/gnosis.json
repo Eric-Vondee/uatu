@@ -57,6 +57,17 @@
   ],
   "dex": [
     {
+      "name": "OkuTrade",
+      "v2RouterAddress": "",
+      "v2FactoryAddress": "",
+      "v3FactoryAddress": "0xe32F7dD7e3f098D518ff19A22d5f028e076489B1",
+      "v3RouterAddress": "0xc6D25285D5C5b62b7ca26D6092751A145D50e9Be",
+      "v3QuoterAddress": "0x7E9cB3499A6cee3baBe5c8a3D328EA7FD36578f4",
+      "permit2Address": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+      "universalRouterAddress": "0x75FC67473A91335B5b8F8821277262a13B38c9b3",
+      "slug": "oku"
+    },
+    {
       "name": "CowSwap",
       "slug": "cowswap"
     }

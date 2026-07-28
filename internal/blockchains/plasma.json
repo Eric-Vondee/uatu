@@ -41,12 +41,19 @@
   ],
   "dex": [
     {
-      "name": "CowSwap",
-      "slug": "cowswap"
+      "name": "OkuTrade",
+      "v2RouterAddress":"",
+      "v2FactoryAddress":"",
+      "v3FactoryAddress": "0xcb2436774C3e191c85056d248EF4260ce5f27A9D",
+      "v3RouterAddress": "0x807F4E281B7A3B324825C64ca53c69F0b418dE40",
+      "v3QuoterAddress": "0xaa52bB8110fE38D0d2d2AF0B85C3A3eE622CA455",
+      "permit2Address": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+      "universalRouterAddress": "0x1b35fbA9357fD9bda7ed0429C8BbAbe1e8CC88fc",
+      "slug": "oku"
     },
     {
-      "name": "Lithos",
-      "slug": "lithos"
+      "name": "CowSwap",
+      "slug": "cowswap"
     }
   ],
   "slug": "plasma",
