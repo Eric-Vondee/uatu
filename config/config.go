@@ -14,8 +14,9 @@ type PostgresConfig struct {
 	DSN string `mapstructure:"POSTGRES_DSN"`
 }
 type Config struct {
-	PORT string `mapstructure:"PORT" validate:"required"`
-	Otel struct {
+	AllowedOrigins []string `mapstructure:"ALLOWED_ORIGINS" validate:"required"`
+	PORT           string   `mapstructure:"PORT" validate:"required"`
+	Otel           struct {
 		IsEnabled bool   `mapstructure:"OTEL_ENABLED"`
 		Endpoint  string `mapstructure:"OTEL_ENDPOINT" validate:"required"`
 		UseTLS    bool   `mapstructure:"OTEL_USE_TLS" validate:"required"`
