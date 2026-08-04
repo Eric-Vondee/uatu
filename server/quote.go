@@ -264,17 +264,18 @@ func (q *quoteHandler) getBestOutput(
 				Dex:           d,
 				PoolType:      pool.PoolType,
 			}
+			fmt.Println("dexrequest", pool.PoolType)
 			var (
 				output *uatu.IDexResponse
 				err    error
 			)
 			switch pool.DexName {
-			case "uniswap":
-			case "pancakeswap":
-			case "oku":
+			case "uniswap", "pancakeswap", "oku":
 				output, err = client.Swap(ctx, dexRequest)
 			case "aerodrome":
 				output, err = client.SwapAerodrome(ctx, dexRequest)
+			default:
+				err = fmt.Errorf("unsupported dex %q", pool.DexName)
 			}
 			results <- quoteResult{response: output, err: err}
 		}(pool, dexBySlug[pool.DexName])
@@ -304,6 +305,7 @@ func (q *quoteHandler) getBestOutput(
 			best = r.response
 		}
 	}
+	fmt.Println("best", best)
 	if best == nil {
 		if lastErr != nil {
 			return nil, fmt.Errorf("no supported route found: %w", lastErr)
