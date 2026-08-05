@@ -222,6 +222,11 @@ type quoteResult struct {
 	err      error
 }
 
+type quoteRoute struct {
+	pool *uatu.Pool
+	dex  uatu.Dex
+}
+
 func (q *quoteHandler) getBestOutput(
 	ctx context.Context,
 	amountIn *big.Int,
@@ -234,8 +239,10 @@ func (q *quoteHandler) getBestOutput(
 		return nil, fmt.Errorf("could not connect to %s rpc: %w", chain.Slug, err)
 	}
 
-	dexBySlug := make(map[string]uatu.Dex, len(pools))
-	for _, pool := range pools {
+	dexBySlug := make(map[string]uatu.Dex, len(pools)+1)
+	routes := make([]quoteRoute, 0, len(pools)+1)
+	for i := range pools {
+		pool := pools[i]
 		if _, ok := dexBySlug[pool.DexName]; ok {
 			continue
 		}
@@ -247,45 +254,67 @@ func (q *quoteHandler) getBestOutput(
 			return nil, fmt.Errorf("could not get dex %s on %s: %w", pool.DexName, chain.Slug, err)
 		}
 		dexBySlug[pool.DexName] = d
+		routes = append(routes, quoteRoute{pool: &pool, dex: d})
 	}
 
-	results := make(chan quoteResult, len(pools))
-	for _, pool := range pools {
-		go func(pool uatu.Pool, d uatu.Dex) {
-			pairAddress := uatu.FormatEvmAddress(pool.PairAddress)
+	for _, d := range chain.Dex {
+		if d.Slug != dex.CowSlug {
+			continue
+		}
+		if _, exists := dexBySlug[d.Slug]; !exists {
+			dexBySlug[d.Slug] = d
+			routes = append(routes, quoteRoute{dex: d})
+		}
+		break
+	}
+
+	results := make(chan quoteResult, len(routes))
+	for _, route := range routes {
+		go func(route quoteRoute) {
+			var (
+				poolFee     uint
+				poolType    string
+				pairAddress common.Address
+			)
+			if route.pool != nil {
+				poolFee = route.pool.PoolFee
+				poolType = route.pool.PoolType
+				pairAddress = uatu.FormatEvmAddress(route.pool.PairAddress)
+			}
 			dexRequest := uatu.IDexRequest{
 				TokenIn:       tokenIn,
 				TokenOut:      tokenOut,
 				AmountIn:      amountIn,
 				PairAddress:   pairAddress,
-				PoolFee:       pool.PoolFee,
+				PoolFee:       poolFee,
 				WalletAddress: walletAddress,
 				ChainId:       chain.ChainID,
-				Dex:           d,
-				PoolType:      pool.PoolType,
+				Dex:           route.dex,
+				PoolType:      poolType,
 			}
-			fmt.Println("dexrequest", pool.PoolType)
 			var (
 				output *uatu.IDexResponse
 				err    error
 			)
-			switch pool.DexName {
+			switch route.dex.Slug {
 			case "uniswap", "pancakeswap", "oku":
 				output, err = client.Swap(ctx, dexRequest)
 			case "aerodrome":
 				output, err = client.SwapAerodrome(ctx, dexRequest)
+			case dex.CowSlug:
+				output, err = client.SwapCow(ctx, dexRequest)
 			default:
-				err = fmt.Errorf("unsupported dex %q", pool.DexName)
+				err = fmt.Errorf("unsupported dex %q", route.dex.Slug)
 			}
 			results <- quoteResult{response: output, err: err}
-		}(pool, dexBySlug[pool.DexName])
+		}(route)
 	}
 	var (
 		best    *uatu.IDexResponse
 		lastErr error
 	)
 
-	for range pools {
+	for range routes {
 		var r quoteResult
 		select {
 		case <-ctx.Done():
@@ -305,7 +334,6 @@ func (q *quoteHandler) getBestOutput(
 			best = r.response
 		}
 	}
-	fmt.Println("best", best)
 	if best == nil {
 		if lastErr != nil {
 			return nil, fmt.Errorf("no supported route found: %w", lastErr)
@@ -314,6 +342,11 @@ func (q *quoteHandler) getBestOutput(
 	}
 	if best.AmountOut == nil {
 		return nil, fmt.Errorf("Best swap quote missing output amount")
+	}
+	if best.RegisterOrder != nil {
+		if err := best.RegisterOrder(ctx); err != nil {
+			return nil, fmt.Errorf("could not register selected DEX order: %w", err)
+		}
 	}
 	return best, nil
 }
