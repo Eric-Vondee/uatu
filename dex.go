@@ -1,6 +1,7 @@
 package uatu
 
 import (
+	"context"
 	"math/big"
 	"time"
 
@@ -41,6 +42,8 @@ type IDexRequest struct {
 type IDexResponse struct {
 	AmountIn, AmountOut                                       *big.Int
 	EncodedData, EncodedERC20Approval, EncodedPermit2Approval []byte
-	Dex                                                       Dex
-	RouterAddress                                             string
+
+	Dex           Dex
+	RouterAddress string
+	RegisterOrder func(context.Context) error `json:"-"`
 }

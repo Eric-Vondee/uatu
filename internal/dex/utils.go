@@ -15,6 +15,7 @@ import (
 
 type Client struct {
 	client *ethclient.Client
+	cow    *cowClient
 }
 
 type Permit2Allowance struct {
@@ -36,7 +37,7 @@ func Provider(rpcUrl string) (*Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not create eth client: %w", err)
 	}
-	return &Client{client: client}, nil
+	return &Client{client: client, cow: newCowClient()}, nil
 }
 
 func (c *Client) getERC20Allowance(
