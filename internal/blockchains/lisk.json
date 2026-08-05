@@ -47,16 +47,7 @@
       "slug": "usdc"
     }
   ],
-  "dex": [
-    {
-      "name": "Velodrome",
-      "universalRouterAddress": "0x...",
-      "quoterAddress": "0x...",
-      "factoryAddress": "0x...",
-      "routerAddress": "0x...",
-      "slug": "velodrome"
-    }
-  ],
+  "dex": [],
   "slug": "lisk",
   "ecosystem": "evm"
 }

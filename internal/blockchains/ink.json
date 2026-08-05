@@ -49,14 +49,6 @@
   ],
   "dex": [
     {
-      "name": "Velodrome",
-      "universalRouterAddress": "0x...",
-      "quoterAddress": "0x...",
-      "factoryAddress": "0x...",
-      "routerAddress": "0x...",
-      "slug": "velodrome"
-    },
-    {
       "name": "CowSwap",
       "slug": "cowswap"
     }
