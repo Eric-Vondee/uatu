@@ -15,6 +15,7 @@ CREATE TABLE If NOT EXISTS quotes(
     recipient_address VARCHAR(255)  NOT NULL,
     token_in jsonb NOT NULL DEFAULT '{}'::jsonb,
     token_out jsonb NOT NULL DEFAULT '{}'::jsonb,
+    pair_address VARCHAR(255),
     hash VARCHAR(255),
     explorer_url VARCHAR(512),
     steps jsonb NOT NULL DEFAULT '[]'::jsonb,

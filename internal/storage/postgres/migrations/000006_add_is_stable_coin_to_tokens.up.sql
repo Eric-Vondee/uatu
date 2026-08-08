@@ -1,0 +1,2 @@
+ALTER TABLE tokens
+    ADD COLUMN IF NOT EXISTS is_stable_coin BOOLEAN NOT NULL DEFAULT false;
