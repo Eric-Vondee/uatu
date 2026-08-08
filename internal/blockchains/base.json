@@ -12,7 +12,8 @@
       "address": "0x0000000000000000000000000000000000000000",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
-      "slug": "eth"
+      "slug": "eth",
+      "isStableCoin": false
     },
     {
       "name": "Wrapped Ether",
@@ -20,7 +21,8 @@
       "address": "0x4200000000000000000000000000000000000006",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
-      "slug": "weth"
+      "slug": "weth",
+      "isStableCoin": false
     },
     {
       "name": "Tether",
@@ -28,7 +30,8 @@
       "address": "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2",
       "decimals": 6,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt.svg",
-      "slug": "usdt"
+      "slug": "usdt",
+      "isStableCoin": true
     },
     {
       "name": "USDC",
@@ -36,7 +39,8 @@
       "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
       "decimals": 6,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdc.svg",
-      "slug": "usdc"
+      "slug": "usdc",
+      "isStableCoin": true
     },
     {
       "name": "DAI",
@@ -44,7 +48,8 @@
       "address": "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/dai.svg",
-      "slug": "dai"
+      "slug": "dai",
+      "isStableCoin": true
     },
     {
       "name": "Wrapped BTC",
@@ -52,7 +57,8 @@
       "address": "0x1ceA84203673764244E05693e42E6Ace62bE9BA5",
       "decimals": 8,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/wbtc.svg",
-      "slug": "wbtc"
+      "slug": "wbtc",
+      "isStableCoin": false
     }
   ],
   "dex": [

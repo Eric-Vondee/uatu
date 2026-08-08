@@ -12,7 +12,8 @@
       "address": "0x0000000000000000000000000000000000000000",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/monad.svg",
-      "slug": "mon"
+      "slug": "mon",
+      "isStableCoin": false
     },
     {
       "name": "Wrapped MON",
@@ -20,7 +21,8 @@
       "address": "0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/monad.svg",
-      "slug": "wmon"
+      "slug": "wmon",
+      "isStableCoin": false
     },
     {
       "name": "Tether (USDT0)",
@@ -28,7 +30,8 @@
       "address": "0xe7cd86e13AC4309349F30B3435a9d337750fC82D",
       "decimals": 6,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt.svg",
-      "slug": "usdt0"
+      "slug": "usdt0",
+      "isStableCoin": true
     },
     {
       "name": "USDC",
@@ -36,7 +39,8 @@
       "address": "0x754704Bc059F8C67012fEd69BC8A327a5aafb603",
       "decimals": 6,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdc.svg",
-      "slug": "usdc"
+      "slug": "usdc",
+      "isStableCoin": true
     },
     {
       "name": "Wrapped BTC",
@@ -44,7 +48,8 @@
       "address": "0x0555E30da8f98308EdB960aa94C0Db47230d2B9c",
       "decimals": 8,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/wbtc.svg",
-      "slug": "wbtc"
+      "slug": "wbtc",
+      "isStableCoin": false
     }
   ],
   "dex": [

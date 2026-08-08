@@ -12,7 +12,8 @@
       "address": "0x0000000000000000000000000000000000000000",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/mantle.png",
-      "slug": "mnt"
+      "slug": "mnt",
+      "isStableCoin": false
     },
     {
       "name": "Wrapped Mantle",
@@ -20,7 +21,8 @@
       "address": "0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/mantle.png",
-      "slug": "wmnt"
+      "slug": "wmnt",
+      "isStableCoin": false
     },
     {
       "name": "Tether",
@@ -28,7 +30,8 @@
       "address": "0x201EBa5CC46D216Ce6DC03F6a759e8E766e956aE",
       "decimals": 6,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt.svg",
-      "slug": "usdt"
+      "slug": "usdt",
+      "isStableCoin": true
     },
     {
       "name": "USDC",
@@ -36,7 +39,8 @@
       "address": "0x09Bc4E0D864854c6aFB6eB9A9cdF58aC190D0dF9",
       "decimals": 6,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdc.svg",
-      "slug": "usdc"
+      "slug": "usdc",
+      "isStableCoin": true
     },
     {
       "name": "Wrapped Ether",
@@ -44,7 +48,8 @@
       "address": "0xdEAddEaDdeadDEadDEADDEAddEADDEAddead1111",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
-      "slug": "weth"
+      "slug": "weth",
+      "isStableCoin": false
     }
   ],
   "dex":  [

@@ -12,7 +12,8 @@
       "address": "0x2cFc85d8E48F8EAB294be644d9E25C3030863003",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/wld.svg",
-      "slug": "wld"
+      "slug": "wld",
+      "isStableCoin": false
     },
     {
       "name": "USD Coin",
@@ -20,7 +21,8 @@
       "address": "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1",
       "decimals": 6,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdc.svg",
-      "slug": "usdc"
+      "slug": "usdc",
+      "isStableCoin": true
     },
     {
       "name": "Wrapped Ether",
@@ -28,7 +30,8 @@
       "address": "0x4200000000000000000000000000000000000006",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
-      "slug": "weth"
+      "slug": "weth",
+      "isStableCoin": false
     },
     {
       "name": "Wrapped BTC",
@@ -36,7 +39,8 @@
       "address": "0x03C7054BCB39f7b2e5B2c7AcB37583e32D70Cfa3",
       "decimals": 8,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/wbtc.svg",
-      "slug": "wbtc"
+      "slug": "wbtc",
+      "isStableCoin": false
     }
   ],
   "dex": [

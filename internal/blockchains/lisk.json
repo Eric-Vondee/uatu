@@ -12,7 +12,8 @@
       "address": "0x0000000000000000000000000000000000000000",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
-      "slug": "eth"
+      "slug": "eth",
+      "isStableCoin": false
     },
     {
       "name": "Wrapped Ether",
@@ -20,7 +21,8 @@
       "address": "0x4200000000000000000000000000000000000006",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
-      "slug": "weth"
+      "slug": "weth",
+      "isStableCoin": false
     },
     {
       "name": "Lisk",
@@ -28,7 +30,8 @@
       "address": "0xac485391EB2d7D88253a7F1eF18C37f4242D1A24",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/lsk.svg",
-      "slug": "lsk"
+      "slug": "lsk",
+      "isStableCoin": false
     },
     {
       "name": "Tether",
@@ -36,7 +39,8 @@
       "address": "0x05D032ac25d322df992303dCa074EE7392C117b9",
       "decimals": 6,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt.svg",
-      "slug": "usdt"
+      "slug": "usdt",
+      "isStableCoin": true
     },
     {
       "name": "USDC",
@@ -44,7 +48,8 @@
       "address": "0xF242275d3a6527d877f2c927a82D9b057609cc71",
       "decimals": 6,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdc.svg",
-      "slug": "usdc"
+      "slug": "usdc",
+      "isStableCoin": true
     }
   ],
   "dex": [],

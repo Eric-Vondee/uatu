@@ -12,7 +12,8 @@
       "address": "0x471EcE3750Da237f93B8E339c536989b8978a438",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/celo.svg",
-      "slug": "celo"
+      "slug": "celo",
+      "isStableCoin": false
     },
     {
       "name": "Tether",
@@ -20,7 +21,8 @@
       "address": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
       "decimals": 6,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt.svg",
-      "slug": "usdt"
+      "slug": "usdt",
+      "isStableCoin": true
     },
     {
       "name": "USDC",
@@ -28,7 +30,8 @@
       "address": "0xcebA9300f2b948710d2653dD7B07f33A8B32118C",
       "decimals": 6,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdc.svg",
-      "slug": "usdc"
+      "slug": "usdc",
+      "isStableCoin": true
     },
     {
       "name": "Mento Dollar",
@@ -36,7 +39,8 @@
       "address": "0x765DE816845861e75A25fCA122bb6898B8B1282a",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/cusd.svg",
-      "slug": "usdm"
+      "slug": "usdm",
+      "isStableCoin": true
     },
     {
       "name": "Wrapped Ether",
@@ -44,7 +48,8 @@
       "address": "0xD221812de1BD094f35587eE8e174B07B6167D9Af",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
-      "slug": "weth"
+      "slug": "weth",
+      "isStableCoin": false
     }
   ],
   "dex": [
