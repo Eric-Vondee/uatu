@@ -28,6 +28,13 @@ func WrapHTTPHandler(
 		ctx, span, requestID := getTracer(r.Context(), r, spanName, cfg.Otel.IsEnabled)
 		defer span.End()
 
+		if requestID != "" {
+			w.Header().Set("X-Request-ID", requestID)
+		}
+		if spanContext := span.SpanContext(); spanContext.IsValid() {
+			w.Header().Set("X-Trace-ID", spanContext.TraceID().String())
+		}
+
 		log := logger.With(zap.String("request_id", requestID))
 
 		resp, _ := handler(ctx, span, log, w, r)
