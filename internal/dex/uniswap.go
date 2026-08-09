@@ -374,7 +374,8 @@ func (c *Client) swapV2(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResp
 		EncodedERC20Approval:   enodedERC20TokenApproval,
 		EncodedPermit2Approval: encodedPermit2Approval,
 		Dex:                    d.Dex,
-		RouterAddress:          d.Dex.UniversalRouterAddress,
+		RouterAddress:          universalRouterAddress,
+		PairAddress:            d.PairAddress,
 	}, nil
 }
 
@@ -451,7 +452,8 @@ func (c *Client) swapV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResp
 		EncodedERC20Approval:   enodedERC20TokenApproval,
 		EncodedPermit2Approval: encodedPermit2Approval,
 		Dex:                    d.Dex,
-		RouterAddress:          d.Dex.UniversalRouterAddress,
+		RouterAddress:          universalRouterAddress,
+		PairAddress:            d.PairAddress,
 	}, nil
 }
 

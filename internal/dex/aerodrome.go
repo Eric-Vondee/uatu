@@ -210,6 +210,7 @@ func (c *Client) SwapAerodrome(ctx context.Context, d uatu.IDexRequest) (*uatu.I
 		EncodedData:          swapCallData,
 		EncodedERC20Approval: enodedERC20TokenApproval,
 		Dex:                  d.Dex,
-		RouterAddress:        d.Dex.V3RouterAddress,
+		RouterAddress:        routerAddress,
+		PairAddress:          d.PairAddress,
 	}, nil
 }

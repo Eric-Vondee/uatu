@@ -523,7 +523,7 @@ func (c *Client) SwapCow(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRes
 		EncodedData:          preSignCalldata,
 		EncodedERC20Approval: erc20Approval,
 		Dex:                  d.Dex,
-		RouterAddress:        settlement.Hex(),
+		RouterAddress:        settlement,
 		RegisterOrder: func(ctx context.Context) error {
 			return cow.PlaceOrder(ctx, network, order, d.WalletAddress, quoteID, uid)
 		},
