@@ -44,6 +44,7 @@ type IDexResponse struct {
 	EncodedData, EncodedERC20Approval, EncodedPermit2Approval []byte
 
 	Dex           Dex
-	RouterAddress string
-	RegisterOrder func(context.Context) error `json:"-"`
+	RouterAddress common.Address
+	PairAddress   common.Address
+	RegisterOrder func(context.Context) error
 }
