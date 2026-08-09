@@ -23,6 +23,7 @@ type Token struct {
 	Logo         string    `bun:"logo,notnull" json:"logo"`
 	Slug         string    `bun:"slug,notnull" json:"slug"`
 	BlockchainID uint      `bun:"blockchain_id,notnull" json:"blockchainId"`
+	IsStableCoin bool      `bun:"is_stable_coin,notnull" json:"isStableCoin"`
 	CreatedAt    time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp" json:"-"`
 	UpdatedAt    time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp" json:"-"`
 
