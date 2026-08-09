@@ -99,3 +99,16 @@ func encodePermit2Approval(token, spender common.Address, amount, expiration *bi
 	}
 	return calldata, nil
 }
+
+func ScaleDecimals(amt *big.Int, from, to uint8) *big.Int {
+	switch {
+	case from == to:
+		return new(big.Int).Set(amt)
+	case from > to:
+		divisor := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(from-to)), nil)
+		return new(big.Int).Div(amt, divisor)
+	default:
+		multiplier := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(to-from)), nil)
+		return new(big.Int).Mul(amt, multiplier)
+	}
+}
