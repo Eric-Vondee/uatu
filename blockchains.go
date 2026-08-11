@@ -38,6 +38,7 @@ type Chain struct {
 	BlockExplorer string    `bun:"block_explorer_url,notnull" json:"blockExplorer"`
 	RpcUrl        string    `bun:"-" json:"rpcUrl"`
 	NativeToken   string    `bun:"native_token,notnull" json:"nativeToken"`
+	Logo          string    `bun:"blockchain_logo,notnull" json:"blockChainLogo"`
 	Tokens        []Token   `bun:"tokens,type:jsonb,notnull" json:"tokens"`
 	Dex           []Dex     `bun:"dex,type:jsonb,notnull" json:"dex"`
 	Slug          string    `bun:"slug,notnull" json:"slug"`

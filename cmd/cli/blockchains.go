@@ -240,6 +240,7 @@ func createBlockchains(ctx context.Context, db *bun.DB, chains []uatu.Chain) err
 		Set("symbol = EXCLUDED.symbol").
 		Set("block_explorer_url = EXCLUDED.block_explorer_url").
 		Set("native_token = EXCLUDED.native_token").
+		Set("blockchain_logo = EXCLUDED.blockchain_logo").
 		Set("tokens = EXCLUDED.tokens").
 		Set("dex = EXCLUDED.dex").
 		Set("slug = EXCLUDED.slug").
