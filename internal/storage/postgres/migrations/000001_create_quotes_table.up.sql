@@ -20,6 +20,7 @@ CREATE TABLE If NOT EXISTS quotes(
     explorer_url VARCHAR(512),
     steps jsonb NOT NULL DEFAULT '[]'::jsonb,
     status VARCHAR(100) NOT NULL DEFAULT 'pending',
+    route jsonb NOT NULL DEFAULT '{}'::jsonb,
     deadline NUMERIC(78,0) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
