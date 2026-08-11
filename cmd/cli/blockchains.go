@@ -124,9 +124,15 @@ func lookupPools(client *dex.Client, chain uatu.Chain, j poolJob) []uatu.Pool {
 			err   error
 		)
 		switch j.d.Slug {
-		case "uniswap", "pancakeswap", "oku", "quickswap":
+		case "uniswap", "pancakeswap", "oku":
 			var found []dex.V3Pair
 			found, err = client.GetV3Pair(factoryAddress, tokenIn, tokenOut)
+			for _, p := range found {
+				pairs = append(pairs, clPair{address: p.PairAddress, fee: p.Fee})
+			}
+		case "quickswap":
+			var found []dex.V3Pair
+			found, err = client.GetQuickSwapV3Pair(factoryAddress, tokenIn, tokenOut)
 			for _, p := range found {
 				pairs = append(pairs, clPair{address: p.PairAddress, fee: p.Fee})
 			}
