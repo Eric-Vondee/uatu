@@ -338,6 +338,9 @@ const docTemplate = `{
         "uatu.Chain": {
             "type": "object",
             "properties": {
+                "blockChainLogo": {
+                    "type": "string"
+                },
                 "blockExplorer": {
                     "type": "string"
                 },

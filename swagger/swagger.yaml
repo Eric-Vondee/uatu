@@ -29,6 +29,8 @@ definitions:
     type: object
   uatu.Chain:
     properties:
+      blockChainLogo:
+        type: string
       blockExplorer:
         type: string
       chainId:
