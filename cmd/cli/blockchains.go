@@ -192,6 +192,7 @@ func newPool(
 		PoolFee:           fee,
 		PoolType:          poolType,
 		TickSpacing:       tickSpacing,
+		IsActivePool:      true,
 	}
 }
 

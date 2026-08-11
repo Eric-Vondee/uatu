@@ -5,19 +5,22 @@ import (
 	"time"
 
 	"github.com/go-co-op/gocron/v2"
+	"github.com/uatu"
 	"github.com/uatu/config"
 	redisstore "github.com/uatu/internal/storage/redis"
 )
 
 const (
-	tokenPriceRefreshInterval = 30 * time.Second
+	tokenPriceRefreshInterval = 1 * time.Second
 	tokenPriceCacheTTL        = 2 * time.Minute
+	poolRefreshInterval       = 3 * time.Minute
 )
 
 func Startup(
 	ctx context.Context,
 	cfg config.Config,
 	redisClient *redisstore.RedisService,
+	chainRepo uatu.ChainRepository,
 ) (func(), error) {
 	scheduler, err := gocron.NewScheduler()
 	if err != nil {
@@ -34,6 +37,16 @@ func Startup(
 		gocron.WithStartAt(gocron.WithStartImmediately()),
 	)
 
+	if err != nil {
+		cancel()
+		return nil, err
+	}
+	_, err = scheduler.NewJob(
+		gocron.DurationJob(poolRefreshInterval),
+		gocron.NewTask(syncPools(jobCtx, cfg, chainRepo, redisClient)),
+		gocron.WithContext(jobCtx),
+		gocron.WithSingletonMode(gocron.LimitModeReschedule),
+	)
 	if err != nil {
 		cancel()
 		return nil, err

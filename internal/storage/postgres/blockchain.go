@@ -80,6 +80,9 @@ func (c *chainRepo) GetPools(ctx context.Context, opts uatu.QueryOptions) ([]uat
 	if opts.DexName != "" {
 		q = q.Where("dex_name = ?", opts.DexName)
 	}
+	if !opts.IncludeInactive {
+		q = q.Where("is_active_pool = TRUE")
+	}
 
 	if opts.TokenIn != "" && opts.TokenOut != "" {
 		q = q.Where(
@@ -92,4 +95,23 @@ func (c *chainRepo) GetPools(ctx context.Context, opts uatu.QueryOptions) ([]uat
 		return nil, fmt.Errorf("could not get pools: %w", err)
 	}
 	return pools, nil
+}
+
+func (c *chainRepo) UpdatePoolLiquidity(ctx context.Context, pool *uatu.Pool) error {
+	_, err := c.db.NewUpdate().
+		Model(pool).
+		Column(
+			"base_token_balance",
+			"quote_token_balance",
+			"liquidity",
+			"liquidity_in_usd",
+			"is_active_pool",
+		).
+		WherePK().
+		Set("updated_at = CURRENT_TIMESTAMP").
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("could not update pool liquidity: %w", err)
+	}
+	return nil
 }

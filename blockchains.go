@@ -49,18 +49,20 @@ type Chain struct {
 }
 
 type QueryOptions struct {
-	TokenIn     string
-	TokenOut    string
-	PairAddress string
-	ChainID     uint
-	DexName     string
-	Slug        string
+	TokenIn         string
+	TokenOut        string
+	PairAddress     string
+	ChainID         uint
+	DexName         string
+	Slug            string
+	IncludeInactive bool
 }
 type ChainRepository interface {
 	GetBlockchains(ctx context.Context) ([]Chain, error)
 	GetBlockchain(ctx context.Context, opts QueryOptions) (Chain, error)
 	GetTokens(ctx context.Context, opts QueryOptions) ([]Token, error)
 	GetPools(ctx context.Context, opts QueryOptions) ([]Pool, error)
+	UpdatePoolLiquidity(ctx context.Context, pool *Pool) error
 	GetDex(ctx context.Context, opts QueryOptions) (Dex, error)
 }
 

@@ -25,7 +25,7 @@ type Permit2Allowance struct {
 }
 
 var erc20ABI = func() abi.ABI {
-	parsed, err := abi.JSON(strings.NewReader(`[{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]`))
+	parsed, err := abi.JSON(strings.NewReader(`[{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]`))
 	if err != nil {
 		panic(err)
 	}
@@ -54,6 +54,22 @@ func (c *Client) getERC20Allowance(
 		return nil, fmt.Errorf("unexpected erc20 allowance type %T", out[0])
 	}
 	return allowance, nil
+}
+
+func (c *Client) GetTokenBalance(
+	ctx context.Context,
+	token, account common.Address,
+) (*big.Int, error) {
+	contract := bind.NewBoundContract(token, erc20ABI, c.client, nil, nil)
+	var out []interface{}
+	if err := contract.Call(&bind.CallOpts{Context: ctx}, &out, "balanceOf", account); err != nil {
+		return nil, fmt.Errorf("could not get token balance: %w", err)
+	}
+	balance, ok := out[0].(*big.Int)
+	if !ok {
+		return nil, fmt.Errorf("unexpected token balance type %T", out[0])
+	}
+	return balance, nil
 }
 
 func encodeERC20Token(amount *big.Int, spender common.Address) ([]byte, error) {

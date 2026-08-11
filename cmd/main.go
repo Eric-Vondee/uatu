@@ -50,14 +50,14 @@ func main() {
 	}
 	defer func() { _ = redisClient.Close() }()
 
-	stopJobs, err := jobs.Startup(context.Background(), *cfg, redisClient)
+	quoteRepo := postgres.NewQuoteRepository(db)
+	chainRepo := postgres.NewChainRepository(db)
+
+	stopJobs, err := jobs.Startup(context.Background(), *cfg, redisClient, chainRepo)
 	if err != nil {
 		log.Fatalf("Failed to start background jobs: %v", err)
 	}
 	defer stopJobs()
-
-	quoteRepo := postgres.NewQuoteRepository(db)
-	chainRepo := postgres.NewChainRepository(db)
 
 	srv := server.New(*cfg, logger, quoteRepo, chainRepo, redisClient)
 	if err := srv.Run(); err != nil {
