@@ -155,7 +155,7 @@ func encodeExactInputSingle(
 	return calldata, nil
 }
 
-func (c *Client) SwapAerodrome(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {
+func (c *Client) Aerodrome(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {
 	tokenIn := d.TokenIn
 	quoterAddress := uatu.FormatEvmAddress(d.Dex.V3QuoterAddress)
 	routerAddress := uatu.FormatEvmAddress(d.Dex.V3RouterAddress)

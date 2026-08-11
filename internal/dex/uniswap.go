@@ -254,7 +254,7 @@ var v3SwapExactInArgs = abi.Arguments{
 	{Type: mustABIType("bool")},
 }
 
-func encodeV3SwapExactSingle(
+func encodeV3InputParams(
 	recipient common.Address,
 	amountIn, amountOutMin *big.Int,
 	tokenIn common.Address, fee *big.Int, tokenOut common.Address,
@@ -273,6 +273,31 @@ func encodeV3SwapExactSingle(
 		return nil, fmt.Errorf("could not encode v3 swap input: %w", err)
 	}
 	return input, nil
+}
+
+func encodeUniswapExactInputSingle(
+	recipient common.Address,
+	amountIn, amountOutMin, fee *big.Int,
+	tokenIn, tokenOut common.Address,
+) ([]byte, error) {
+	routerABI, err := contracts.V3UniswapRouterMetaData.GetAbi()
+	if err != nil {
+		return nil, fmt.Errorf("could not parse uniswap v3swap router abi: %w", err)
+	}
+	params := contracts.IV3SwapRouterExactInputSingleParams{
+		TokenIn:           tokenIn,
+		TokenOut:          tokenOut,
+		Fee:               fee,
+		Recipient:         recipient,
+		AmountIn:          amountIn,
+		AmountOutMinimum:  amountOutMin,
+		SqrtPriceLimitX96: big.NewInt(0),
+	}
+	calldata, err := routerABI.Pack("exactInputSingle", params)
+	if err != nil {
+		return nil, fmt.Errorf("could not encode uniswap exactInputSingle calldata: %w", err)
+	}
+	return calldata, nil
 }
 
 func encodeUniversalRouterExecute(cmd Command, input []byte, deadline *big.Int) ([]byte, error) {
@@ -379,7 +404,57 @@ func (c *Client) swapV2(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResp
 	}, nil
 }
 
-func (c *Client) swapV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {
+func (c *Client) swapV3ExactInputSingle(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {
+	tokenIn := d.TokenIn
+	quoterAddress := uatu.FormatEvmAddress(d.Dex.V3QuoterAddress)
+	routerAddress := uatu.FormatEvmAddress(d.Dex.V3RouterAddress)
+	erc20Allowance, err := c.getERC20Allowance(
+		ctx,
+		tokenIn,
+		d.WalletAddress,
+		routerAddress,
+	)
+	if err != nil {
+		return nil, err
+	}
+	var enodedERC20TokenApproval []byte
+	if erc20Allowance.Cmp(d.AmountIn) <= 0 {
+		enodedERC20TokenApproval, err = encodeERC20Token(d.AmountIn, routerAddress)
+		if err != nil {
+			return nil, err
+		}
+	}
+	pool, err := c.GetV3Pool(d.PairAddress)
+	if err != nil {
+		return nil, err
+	}
+	if tokenIn != pool.Token0 && tokenIn != pool.Token1 {
+		return nil, fmt.Errorf("token %s is not in pool %s", d.TokenIn, d.PairAddress)
+	}
+	amountOut, err := c.getV3AmountOut(d.AmountIn, quoterAddress, tokenIn, d.TokenOut, pool.Fee)
+	if err != nil {
+		return nil, err
+	}
+	swapCallData, err := encodeUniswapExactInputSingle(
+		d.WalletAddress,
+		d.AmountIn, amountOut, pool.Fee,
+		tokenIn, d.TokenOut,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &uatu.IDexResponse{
+		AmountIn:             d.AmountIn,
+		AmountOut:            amountOut,
+		EncodedData:          swapCallData,
+		EncodedERC20Approval: enodedERC20TokenApproval,
+		Dex:                  d.Dex,
+		RouterAddress:        routerAddress,
+		PairAddress:          d.PairAddress,
+	}, nil
+}
+
+func (c *Client) swapV3UniversalRouter(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {
 	tokenIn := d.TokenIn
 	universalRouterAddress := uatu.FormatEvmAddress(d.Dex.UniversalRouterAddress)
 	permit2Address := uatu.FormatEvmAddress(d.Dex.Permit2Address)
@@ -431,7 +506,7 @@ func (c *Client) swapV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResp
 		return nil, err
 	}
 
-	input, err := encodeV3SwapExactSingle(
+	input, err := encodeV3InputParams(
 		d.WalletAddress,
 		d.AmountIn,
 		amountOut,
@@ -457,12 +532,12 @@ func (c *Client) swapV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResp
 	}, nil
 }
 
-func (c *Client) Swap(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {
+func (c *Client) Uniswap(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {
 	switch d.PoolType {
 	case "v2":
 		return c.swapV2(ctx, d)
 	case "v3":
-		return c.swapV3(ctx, d)
+		return c.swapV3UniversalRouter(ctx, d)
 	default:
 		return nil, fmt.Errorf("unsupported pool type: %s", d.PoolType)
 	}
