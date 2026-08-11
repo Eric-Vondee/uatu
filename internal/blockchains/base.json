@@ -96,6 +96,17 @@
       "slug": "aerodrome"
     },
     {
+      "name":"QuickSwap",
+      "v2RouterAddress": "0x4a012af2b05616Fb390ED32452641C3F04633bb5",
+      "v2FactoryAddress": "0xEC6540261aaaE13F236A032d454dc9287E52e56A",
+      "v3FactoryAddress": "",
+      "v3RouterAddress": "",
+      "v3QuoterAddress": "",
+      "permit2Address": "",
+      "universalRouterAddress": "",
+      "slug": "quickswap"
+    },
+    {
       "name": "CowSwap",
       "slug": "cowswap"
     }
