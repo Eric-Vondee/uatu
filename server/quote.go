@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math/big"
 	"net/http"
@@ -17,7 +16,6 @@ import (
 	"github.com/uatu"
 	"github.com/uatu/config"
 	"github.com/uatu/internal/dex"
-	feeds "github.com/uatu/internal/price_feed"
 	redisstore "github.com/uatu/internal/storage/redis"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
@@ -29,13 +27,6 @@ type quoteHandler struct {
 	chainRepo  uatu.ChainRepository
 	priceCache *redisstore.RedisService
 }
-
-const (
-	basisPointsDenominator = 10000
-	minOracleOutputBps     = 9800
-	maxOracleOutputBps     = 10200
-	maxOraclePriceAge      = 90 * time.Second
-)
 
 func newQuoteID() string {
 	id := uuid.New()
@@ -71,6 +62,7 @@ func (q *quoteHandler) CreateQuote(
 	r *http.Request,
 ) (render.Renderer, error) {
 	req := new(uatu.QuoteRequest)
+
 	if err := render.Bind(r, req); err != nil {
 		return nil, err
 	}
@@ -112,11 +104,16 @@ func (q *quoteHandler) CreateQuote(
 	amountIn := ConvertDecimalToBigInt(req.Amount, tokenIn.Decimals)
 	walletAddress := uatu.FormatEvmAddress(req.RecipientAddress)
 
-	res, err := q.getBestOutput(
-		ctx, amountIn, chain,
-		tokenIn, tokenOut, walletAddress,
-		pools,
-	)
+	res, err := dex.GetBestDexQuote(ctx, &dex.BestQuoteParams{
+		AmountIn:      amountIn,
+		Chain:         chain,
+		TokenIn:       tokenIn,
+		TokenOut:      tokenOut,
+		WalletAddress: walletAddress,
+		Pools:         pools,
+		RPCURL:        q.cfg.GetRPC(chain.Slug),
+		PriceCache:    q.priceCache,
+	})
 	if err != nil {
 		logger.Error("Failed to get best route", zap.Error(err))
 		return APIError{
@@ -124,25 +121,30 @@ func (q *quoteHandler) CreateQuote(
 		}, err
 	}
 
-	quoteResponse, err := newQuote(res, chain, tokenIn, tokenOut, walletAddress)
+	quoteResponse, err := q.newQuote(ctx, res, chain, tokenIn, tokenOut, walletAddress)
 	if err != nil {
 		logger.Error("Failed to build quote", zap.Error(err))
 		return newAPIResponse(
 			http.StatusInternalServerError,
-			"an error occurred building quote",
+			err.Error(),
 			nil,
 		), err
 	}
-	if err := q.quoteRepo.Create(ctx, &quoteResponse.Quote); err != nil {
-		logger.Error("Failed to create quote", zap.Error(err))
-		return newAPIResponse(
-				http.StatusInternalServerError,
-				"an error occurred creating quote",
-				nil,
-			),
-			err
-	}
 	return newAPIResponse(http.StatusOK, "Quote created successfully", quoteResponse), nil
+}
+
+func ConvertDecimalToBigInt(amount decimal.Decimal, decimals uint8) *big.Int {
+	return amount.Shift(int32(decimals)).BigInt()
+}
+
+func getToken(tokens []uatu.Token, tokenAddress common.Address) (uatu.Token, error) {
+	idx := slices.IndexFunc(tokens, func(t uatu.Token) bool {
+		return uatu.FormatEvmAddress(t.Address) == tokenAddress
+	})
+	if idx == -1 {
+		return uatu.Token{}, fmt.Errorf("token not found")
+	}
+	return tokens[idx], nil
 }
 
 func getTokenInAndOut(
@@ -161,7 +163,8 @@ func getTokenInAndOut(
 	return tokenIn, tokenOut, nil
 }
 
-func newQuote(
+func (q *quoteHandler) newQuote(
+	ctx context.Context,
 	res *uatu.IDexResponse,
 	chain uatu.Chain,
 	tokenIn, tokenOut uatu.Token,
@@ -231,284 +234,13 @@ func newQuote(
 		ExplorerUrl: chain.BlockExplorer,
 		Steps:       steps,
 		Status:      uatu.Pending,
+		Route:       res.Route,
 		Deadline:    deadline,
 		CreatedAt:   time.Now().UTC(),
 		UpdatedAt:   time.Now().UTC(),
 	}
+	if err := q.quoteRepo.Create(ctx, &quote); err != nil {
+		return nil, fmt.Errorf("an error occurred creating quote")
+	}
 	return &uatu.QuoteResponse{Quote: quote}, nil
-}
-
-type quoteResult struct {
-	response *uatu.IDexResponse
-	err      error
-}
-
-type quoteRoute struct {
-	pool *uatu.Pool
-	dex  uatu.Dex
-}
-
-func (q *quoteHandler) cachedOraclePrice(ctx context.Context, token uatu.Token) (oraclePrice, error) {
-	if q.priceCache == nil {
-		return oraclePrice{}, fmt.Errorf("price cache is not configured")
-	}
-
-	var response feeds.TokenFeedResponse
-	if err := q.priceCache.Get(ctx, feeds.PriceCacheKey(token.Slug), &response); err != nil {
-		if errors.Is(err, redisstore.ErrCacheMiss) {
-			return oraclePrice{}, fmt.Errorf("price is unavailable")
-		}
-		return oraclePrice{}, err
-	}
-	answer, ok := new(big.Int).SetString(response.PriceAnswer, 10)
-	if !ok || answer.Sign() <= 0 {
-		return oraclePrice{}, fmt.Errorf("cached price is invalid")
-	}
-	if response.UpdatedAt <= 0 || response.FetchedAt <= 0 {
-		return oraclePrice{}, fmt.Errorf("cached price has invalid timestamps")
-	}
-	updatedAt := time.Unix(response.UpdatedAt, 0)
-	if updatedAt.After(time.Now().Add(time.Minute)) {
-		return oraclePrice{}, fmt.Errorf("cached price has a future update time")
-	}
-	fetchedAt := time.Unix(response.FetchedAt, 0)
-	if age := time.Since(fetchedAt); age < 0 || age > maxOraclePriceAge {
-		return oraclePrice{}, fmt.Errorf("cached price is stale")
-	}
-
-	return oraclePrice{
-		answer:    answer,
-		decimals:  response.PriceDecimals,
-		updatedAt: updatedAt,
-		fetchedAt: fetchedAt,
-	}, nil
-}
-
-func (q *quoteHandler) getBestOutput(
-	ctx context.Context,
-	amountIn *big.Int,
-	chain uatu.Chain,
-	tokenIn, tokenOut uatu.Token,
-	walletAddress common.Address,
-	pools []uatu.Pool,
-) (*uatu.IDexResponse, error) {
-	client, err := dex.Provider(q.cfg.GetRPC(chain.Slug))
-	if err != nil {
-		return nil, fmt.Errorf("could not connect to %s rpc: %w", chain.Slug, err)
-	}
-
-	priceIn, err := q.cachedOraclePrice(ctx, tokenIn)
-	if err != nil {
-		return nil, fmt.Errorf("could not load oracle price for %s: %w", tokenIn.Symbol, err)
-	}
-	priceOut, err := q.cachedOraclePrice(ctx, tokenOut)
-	if err != nil {
-		return nil, fmt.Errorf("could not load oracle price for %s: %w", tokenOut.Symbol, err)
-	}
-
-	tokenInAddress := uatu.FormatEvmAddress(tokenIn.Address)
-	tokenOutAddress := uatu.FormatEvmAddress(tokenOut.Address)
-
-	dexBySlug := make(map[string]uatu.Dex, len(pools)+1)
-	routes := make([]quoteRoute, 0, len(pools)+1)
-	for i := range pools {
-		pool := pools[i]
-		if _, ok := dexBySlug[pool.DexName]; ok {
-			continue
-		}
-		d, err := q.chainRepo.GetDex(ctx, uatu.QueryOptions{
-			ChainID: chain.ChainID,
-			Slug:    pool.DexName,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("could not get dex %s on %s: %w", pool.DexName, chain.Slug, err)
-		}
-		dexBySlug[pool.DexName] = d
-		routes = append(routes, quoteRoute{pool: &pool, dex: d})
-	}
-
-	for _, d := range chain.Dex {
-		if d.Slug != dex.CowSlug {
-			continue
-		}
-		if _, exists := dexBySlug[d.Slug]; !exists {
-			dexBySlug[d.Slug] = d
-			routes = append(routes, quoteRoute{dex: d})
-		}
-		break
-	}
-
-	results := make(chan quoteResult, len(routes))
-	for _, route := range routes {
-		go func(route quoteRoute) {
-			var (
-				poolFee     uint
-				poolType    string
-				pairAddress common.Address
-			)
-			if route.pool != nil {
-				poolFee = route.pool.PoolFee
-				poolType = route.pool.PoolType
-				pairAddress = uatu.FormatEvmAddress(route.pool.PairAddress)
-			}
-			dexRequest := uatu.IDexRequest{
-				TokenIn:       tokenInAddress,
-				TokenOut:      tokenOutAddress,
-				AmountIn:      amountIn,
-				PairAddress:   pairAddress,
-				PoolFee:       poolFee,
-				WalletAddress: walletAddress,
-				ChainId:       chain.ChainID,
-				Dex:           route.dex,
-				PoolType:      poolType,
-			}
-			var (
-				output *uatu.IDexResponse
-				err    error
-			)
-			switch route.dex.Slug {
-			case "uniswap", "pancakeswap", "oku":
-				output, err = client.Swap(ctx, dexRequest)
-			case "aerodrome":
-				output, err = client.SwapAerodrome(ctx, dexRequest)
-			case dex.CowSlug:
-				output, err = client.SwapCow(ctx, dexRequest)
-			default:
-				err = fmt.Errorf("unsupported dex %q", route.dex.Slug)
-			}
-			results <- quoteResult{response: output, err: err}
-		}(route)
-	}
-	var (
-		best    *uatu.IDexResponse
-		lastErr error
-	)
-
-	for range routes {
-		var r quoteResult
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		case r = <-results:
-		}
-
-		switch {
-		case r.err != nil:
-			lastErr = r.err
-			continue
-		case r.response == nil || r.response.AmountOut == nil:
-			continue
-		}
-		if err := guardSwapOutput(amountIn, r.response.AmountOut, tokenIn, tokenOut, priceIn, priceOut); err != nil {
-			lastErr = err
-			continue
-		}
-
-		if best == nil || r.response.AmountOut.Cmp(best.AmountOut) > 0 {
-			best = r.response
-		}
-	}
-	if best == nil {
-		if lastErr != nil {
-			return nil, fmt.Errorf("no acceptable route found: %w", lastErr)
-		}
-		return nil, fmt.Errorf("no acceptable route found")
-	}
-	if best.RegisterOrder != nil {
-		if err := best.RegisterOrder(ctx); err != nil {
-			return nil, fmt.Errorf("could not register selected DEX order: %w", err)
-		}
-	}
-	return best, nil
-}
-
-type oraclePrice struct {
-	answer    *big.Int
-	decimals  uint8
-	updatedAt time.Time
-	fetchedAt time.Time
-}
-
-func guardSwapOutput(
-	amountIn, amountOut *big.Int,
-	tokenIn, tokenOut uatu.Token,
-	priceIn, priceOut oraclePrice,
-) error {
-	if amountIn == nil || amountIn.Sign() <= 0 {
-		return fmt.Errorf("swap input amount must be positive")
-	}
-	if amountOut == nil || amountOut.Sign() <= 0 {
-		zap.L().Warn("swap quote returned no output",
-			zap.String("tokenIn", tokenIn.Symbol),
-			zap.String("tokenOut", tokenOut.Symbol),
-			zap.String("amountIn", amountIn.String()),
-			zap.String("amountOut", amountString(amountOut)),
-		)
-		return fmt.Errorf("this swap would result in no payout")
-	}
-	if priceIn.answer == nil || priceIn.answer.Sign() <= 0 || priceOut.answer == nil || priceOut.answer.Sign() <= 0 {
-		return fmt.Errorf("oracle prices must be positive")
-	}
-
-	numerator, denominator := oracleOutputFraction(amountIn, tokenIn, tokenOut, priceIn, priceOut)
-	expectedOut := new(big.Int).Quo(new(big.Int).Set(numerator), denominator)
-	if expectedOut.Sign() <= 0 {
-		return fmt.Errorf("oracle expected output is too small")
-	}
-
-	amountOutScaled := new(big.Int).Mul(amountOut, denominator)
-	amountOutScaled.Mul(amountOutScaled, big.NewInt(basisPointsDenominator))
-	minScaled := new(big.Int).Mul(numerator, big.NewInt(minOracleOutputBps))
-	maxScaled := new(big.Int).Mul(numerator, big.NewInt(maxOracleOutputBps))
-	if amountOutScaled.Cmp(minScaled) < 0 || amountOutScaled.Cmp(maxScaled) > 0 {
-		zap.L().Warn("swap quote outside oracle bounds",
-			zap.String("tokenIn", tokenIn.Symbol),
-			zap.String("tokenOut", tokenOut.Symbol),
-			zap.String("amountIn", amountIn.String()),
-			zap.String("amountOut", amountOut.String()),
-			zap.String("expectedOut", expectedOut.String()),
-		)
-		return fmt.Errorf("swap output failed")
-	}
-	return nil
-}
-
-func oracleOutputFraction(
-	amountIn *big.Int,
-	tokenIn, tokenOut uatu.Token,
-	priceIn, priceOut oraclePrice,
-) (*big.Int, *big.Int) {
-	base := big.NewInt(10)
-	inTokenScale := new(big.Int).Exp(base, big.NewInt(int64(tokenIn.Decimals)), nil)
-	outTokenScale := new(big.Int).Exp(base, big.NewInt(int64(tokenOut.Decimals)), nil)
-	inPriceScale := new(big.Int).Exp(base, big.NewInt(int64(priceIn.decimals)), nil)
-	outPriceScale := new(big.Int).Exp(base, big.NewInt(int64(priceOut.decimals)), nil)
-
-	numerator := new(big.Int).Mul(amountIn, priceIn.answer)
-	numerator.Mul(numerator, outTokenScale)
-	numerator.Mul(numerator, outPriceScale)
-	denominator := new(big.Int).Mul(priceOut.answer, inTokenScale)
-	denominator.Mul(denominator, inPriceScale)
-	return numerator, denominator
-}
-
-func amountString(amount *big.Int) string {
-	if amount == nil {
-		return "<nil>"
-	}
-	return amount.String()
-}
-
-func ConvertDecimalToBigInt(amount decimal.Decimal, decimals uint8) *big.Int {
-	return amount.Shift(int32(decimals)).BigInt()
-}
-
-func getToken(tokens []uatu.Token, tokenAddress common.Address) (uatu.Token, error) {
-	idx := slices.IndexFunc(tokens, func(t uatu.Token) bool {
-		return uatu.FormatEvmAddress(t.Address) == tokenAddress
-	})
-	if idx == -1 {
-		return uatu.Token{}, fmt.Errorf("token not found")
-	}
-	return tokens[idx], nil
 }

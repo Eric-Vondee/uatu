@@ -39,6 +39,12 @@ type IDexRequest struct {
 	PoolType                                      string
 }
 
+type Route struct {
+	Name string `json:"name"`
+	Logo string `json:"logo"`
+	Dex  string `json:"dex"`
+}
+
 type IDexResponse struct {
 	AmountIn, AmountOut                                       *big.Int
 	EncodedData, EncodedERC20Approval, EncodedPermit2Approval []byte
@@ -47,4 +53,5 @@ type IDexResponse struct {
 	RouterAddress common.Address
 	PairAddress   common.Address
 	RegisterOrder func(context.Context) error
+	Route         Route
 }

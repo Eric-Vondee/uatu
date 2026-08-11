@@ -63,6 +63,7 @@ type Quote struct {
 	ExplorerUrl        string            `bun:"explorer_url" json:"explorerUrl,omitempty"`
 	Steps              []Actions         `bun:"steps,notnull" json:"steps"`
 	Status             TransactionStatus `bun:"type:varchar(100),default:'pending',notnull" json:"status" swaggertype:"string" enums:"pending,completed,failed"`
+	Route              Route             `bun:"type:jsonb,notnull" json:"route"`
 	Deadline           *big.Int          `bun:"deadline,notnull" json:"deadline" swaggertype:"integer"`
 	CreatedAt          time.Time         `bun:"created_at,notnull" json:"createdAt"`
 	UpdatedAt          time.Time         `bun:"updated_at,notnull" json:"updatedAt"`
