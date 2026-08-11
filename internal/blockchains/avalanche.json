@@ -5,6 +5,7 @@
   "blockExplorer": "https://snowtrace.io",
   "rpcUrl": "https://avalanche-c-chain-rpc.publicnode.com",
   "nativeToken": "AVAX",
+  "blockChainLogo": "https://pub-4d104cbff77a46759432960f97284660.r2.dev/blockchains/avalanche-avax-logo.svg",
   "tokens": [
     {
       "name": "Avalanche",

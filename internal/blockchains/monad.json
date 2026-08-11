@@ -5,6 +5,7 @@
   "blockExplorer": "https://monadscan.com",
   "rpcUrl": "https://rpc.monad.xyz",
   "nativeToken": "MON",
+  "blockChainLogo": "https://pub-4d104cbff77a46759432960f97284660.r2.dev/blockchains/monad.svg",
   "tokens": [
     {
       "name": "Monad",

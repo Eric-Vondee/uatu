@@ -5,6 +5,7 @@
   "blockExplorer": "https://basescan.org",
   "rpcUrl": "https://base-rpc.publicnode.com",
   "nativeToken": "ETH",
+  "blockChainLogo": "https://pub-4d104cbff77a46759432960f97284660.r2.dev/blockchains/chain-light.svg",
   "tokens": [
     {
       "name": "ETHER",

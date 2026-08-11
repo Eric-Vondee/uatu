@@ -5,6 +5,7 @@
   "blockExplorer": "https://plasmascan.to",
   "rpcUrl": "https://rpc.plasma.to",
   "nativeToken": "XPL",
+  "blockChainLogo": "https://pub-4d104cbff77a46759432960f97284660.r2.dev/blockchains/plasma.png",
   "tokens": [
     {
       "name": "XPL",

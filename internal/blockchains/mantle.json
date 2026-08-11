@@ -5,6 +5,7 @@
   "blockExplorer": "https://mantlescan.xyz",
   "rpcUrl": "https://mantle-rpc.publicnode.com",
   "nativeToken": "MNT",
+  "blockChainLogo": "https://pub-4d104cbff77a46759432960f97284660.r2.dev/blockchains/mantle.png",
   "tokens": [
     {
       "name": "Mantle",

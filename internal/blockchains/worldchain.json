@@ -5,6 +5,7 @@
   "blockExplorer": "https://worldscan.org",
   "rpcUrl": "https://worldchain-mainnet.g.alchemy.com/public",
   "nativeToken": "WRLD",
+  "blockChainLogo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/world.svg",
   "tokens": [
     {
       "name": "Worldcoin",

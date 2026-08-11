@@ -5,6 +5,7 @@
   "blockExplorer": "https://arbiscan.io",
   "rpcUrl": "https://arbitrum-one-rpc.publicnode.com",
   "nativeToken": "ETH",
+  "blockChainLogo": "https://pub-4d104cbff77a46759432960f97284660.r2.dev/blockchains/arb.svg",
   "tokens": [
     {
       "name": "ETHER",

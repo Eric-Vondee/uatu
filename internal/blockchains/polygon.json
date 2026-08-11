@@ -5,6 +5,7 @@
   "blockExplorer": "https://polygonscan.com",
   "rpcUrl": "https://polygon-bor-rpc.publicnode.com",
   "nativeToken": "POL",
+  "blockChainLogo": "https://pub-4d104cbff77a46759432960f97284660.r2.dev/blockchains/polygon.svg",
   "tokens": [
     {
       "name": "POL",

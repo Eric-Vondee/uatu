@@ -5,6 +5,7 @@
   "blockExplorer": "https://optimistic.etherscan.io",
   "rpcUrl": "https://optimism-rpc.publicnode.com",
   "nativeToken": "ETH",
+  "blockChainLogo": "https://pub-4d104cbff77a46759432960f97284660.r2.dev/blockchains/OP.svg",
   "tokens": [
     {
       "name": "ETHER",

@@ -5,6 +5,7 @@
   "blockExplorer": "https://gnosisscan.io",
   "rpcUrl": "https://rpc.gnosischain.com",
   "nativeToken": "XDAI",
+  "blockChainLogo": "https://pub-4d104cbff77a46759432960f97284660.r2.dev/blockchains/gnosis.png",
   "tokens": [
     {
       "name": "Gnosis",

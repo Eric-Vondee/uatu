@@ -5,6 +5,7 @@
   "blockExplorer": "https://blockscout.lisk.com",
   "rpcUrl": "https://rpc.api.lisk.com/ee50335a99d24043a6f88255c6a791b5",
   "nativeToken": "ETH",
+  "blockChainLogo": "https://pub-4d104cbff77a46759432960f97284660.r2.dev/blockchains/lisk.svg",
   "tokens": [
     {
       "name": "ETHER",

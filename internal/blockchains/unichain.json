@@ -5,6 +5,7 @@
   "blockExplorer": "https://uniscan.xyz",
   "rpcUrl": "https://mainnet.unichain.org",
   "nativeToken": "ETH",
+  "blockChainLogo": "https://pub-4d104cbff77a46759432960f97284660.r2.dev/blockchains/unichain_mainnet.png",
   "tokens": [
     {
       "name": "ETHER",

@@ -5,6 +5,7 @@
   "blockExplorer": "https://bscscan.com",
   "rpcUrl": "https://bsc-rpc.publicnode.com",
   "nativeToken": "BNB",
+  "blockChainLogo": "https://pub-4d104cbff77a46759432960f97284660.r2.dev/blockchains/bnb.png",
   "tokens": [
     {
       "name": "BNB",

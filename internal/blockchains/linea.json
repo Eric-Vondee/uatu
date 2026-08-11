@@ -5,6 +5,7 @@
   "blockExplorer": "https://lineascan.build",
   "rpcUrl": "https://rpc.linea.build",
   "nativeToken": "ETH",
+  "blockChainLogo": "https://pub-4d104cbff77a46759432960f97284660.r2.dev/blockchains/linea.png",
   "tokens": [
     {
       "name": "ETHER",
