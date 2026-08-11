@@ -124,7 +124,7 @@ func lookupPools(client *dex.Client, chain uatu.Chain, j poolJob) []uatu.Pool {
 			err   error
 		)
 		switch j.d.Slug {
-		case "uniswap", "pancakeswap", "oku":
+		case "agni", "uniswap", "pancakeswap", "oku":
 			var found []dex.V3Pair
 			found, err = client.GetV3Pair(factoryAddress, tokenIn, tokenOut)
 			for _, p := range found {
@@ -197,7 +197,7 @@ func newPool(
 
 func hasSwapDex(c uatu.Chain) bool {
 	for _, d := range c.Dex {
-		if d.Slug == "uniswap" || d.Slug == "pancakeswap" {
+		if d.Slug == "agni" || d.Slug == "uniswap" || d.Slug == "pancakeswap" {
 			return true
 		}
 	}
