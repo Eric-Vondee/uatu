@@ -49,7 +49,7 @@ func Deadline() *big.Int {
 // @Tags quotes
 // @Accept json
 // @Produce json
-// @Param message body quoteRequest true "request body to create a swap quote"
+// @Param message body uatu.QuoteRequest true "request body to create a swap quote"
 // @Success 200 {object} APIResponse{data=uatu.Quote}
 // @Failure 400 {object} APIResponse
 // @Failure 500 {object} APIResponse
@@ -131,6 +131,93 @@ func (q *quoteHandler) CreateQuote(
 		), err
 	}
 	return newAPIResponse(http.StatusOK, "Quote created successfully", quoteResponse), nil
+}
+
+// GetQuotes returns one non-persisted quote option for each supported DEX.
+//
+// @Summary List DEX quote options
+// @Description Prices a swap against every supported DEX and returns the valid routes ordered by output amount.
+// @Tags quotes
+// @Accept json
+// @Produce json
+// @Param message body uatu.QuoteRequest true "request body to compare DEX quotes"
+// @Success 200 {object} APIResponse{data=[]uatu.RouteQuote}
+// @Failure 400 {object} APIResponse
+// @Failure 500 {object} APIResponse
+// @Router /quotes/routes [post]
+func (q *quoteHandler) GetQuotes(
+	ctx context.Context,
+	span trace.Span,
+	logger *zap.Logger,
+	w http.ResponseWriter,
+	r *http.Request,
+) (render.Renderer, error) {
+	req := new(uatu.QuoteRequest)
+	if err := render.Bind(r, req); err != nil {
+		return nil, err
+	}
+	if err := metron.ValidateStruct(req); err != nil {
+		return APIError{
+			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
+		}, err
+	}
+
+	chain, err := q.chainRepo.GetBlockchain(ctx, uatu.QueryOptions{ChainID: req.ChainID})
+	if err != nil {
+		logger.Error("Failed to get chain", zap.Error(err))
+		return APIError{
+			newAPIResponse(http.StatusInternalServerError, "an error occurred fetching chain", nil),
+		}, err
+	}
+
+	tokenIn, tokenOut, err := getTokenInAndOut(chain.Tokens, req.TokenIn, req.TokenOut)
+	if err != nil {
+		return APIError{
+			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
+		}, err
+	}
+
+	pools, err := q.chainRepo.GetPools(ctx, uatu.QueryOptions{
+		TokenIn:  tokenIn.Address,
+		TokenOut: tokenOut.Address,
+		ChainID:  req.ChainID,
+	})
+	if err != nil {
+		logger.Error("Failed to get pools", zap.Error(err))
+		return APIError{
+			newAPIResponse(http.StatusInternalServerError, "an error occurred fetching pools", nil),
+		}, err
+	}
+
+	responses, err := dex.GetDexQuotes(ctx, &dex.BestQuoteParams{
+		AmountIn:      ConvertDecimalToBigInt(req.Amount, tokenIn.Decimals),
+		Chain:         chain,
+		TokenIn:       tokenIn,
+		TokenOut:      tokenOut,
+		WalletAddress: uatu.FormatEvmAddress(req.RecipientAddress),
+		Pools:         pools,
+		RPCURL:        q.cfg.GetRPC(chain.Slug),
+		PriceCache:    q.priceCache,
+	})
+	if err != nil {
+		logger.Error("Failed to get DEX quotes", zap.Error(err))
+		return APIError{
+			newAPIResponse(http.StatusInternalServerError, err.Error(), nil),
+		}, err
+	}
+
+	quotes := make([]uatu.RouteQuote, 0, len(responses))
+	for _, response := range responses {
+		quotes = append(quotes, uatu.RouteQuote{
+			AmountIn:  response.AmountIn.String(),
+			AmountOut: response.AmountOut.String(),
+			TokenIn:   tokenIn,
+			TokenOut:  tokenOut,
+			Route:     response.Route,
+		})
+	}
+
+	return newAPIResponse(http.StatusOK, "DEX quotes fetched successfully", quotes), nil
 }
 
 func ConvertDecimalToBigInt(amount decimal.Decimal, decimals uint8) *big.Int {

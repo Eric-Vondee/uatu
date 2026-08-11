@@ -43,6 +43,15 @@ type QuoteResponse struct {
 	Quote
 }
 
+// RouteQuote is a non-persisted quote option for a direct DEX route.
+type RouteQuote struct {
+	AmountIn  string `json:"amountIn"`
+	AmountOut string `json:"amountOut"`
+	TokenIn   Token  `json:"tokenIn"`
+	TokenOut  Token  `json:"tokenOut"`
+	Route     Route  `json:"route"`
+}
+
 type Quote struct {
 	ID                 uuid.UUID         `bun:"type:uuid,default:uuid_v4(),pk" json:"-"`
 	QuoteID            string            `bun:"quote_id,notnull,unique" json:"quoteId"`

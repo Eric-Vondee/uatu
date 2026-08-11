@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"sort"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -102,10 +103,10 @@ func cachedOraclePrice(
 	}, nil
 }
 
-func GetBestDexQuote(
+func GetDexQuotes(
 	ctx context.Context,
 	params *BestQuoteParams,
-) (*uatu.IDexResponse, error) {
+) ([]*uatu.IDexResponse, error) {
 	if params == nil {
 		return nil, fmt.Errorf("best quote parameters are required")
 	}
@@ -208,7 +209,7 @@ func GetBestDexQuote(
 	}
 
 	var (
-		best    *uatu.IDexResponse
+		quotes  = make([]*uatu.IDexResponse, 0, len(routes))
 		lastErr error
 	)
 
@@ -232,16 +233,29 @@ func GetBestDexQuote(
 			continue
 		}
 
-		if best == nil || r.response.AmountOut.Cmp(best.AmountOut) > 0 {
-			best = r.response
-		}
+		quotes = append(quotes, r.response)
 	}
-	if best == nil {
+	if len(quotes) == 0 {
 		if lastErr != nil {
 			return nil, fmt.Errorf("no acceptable route found: %w", lastErr)
 		}
 		return nil, fmt.Errorf("no acceptable route found")
 	}
+	sort.Slice(quotes, func(i, j int) bool {
+		return quotes[i].AmountOut.Cmp(quotes[j].AmountOut) > 0
+	})
+	return quotes, nil
+}
+
+func GetBestDexQuote(
+	ctx context.Context,
+	params *BestQuoteParams,
+) (*uatu.IDexResponse, error) {
+	quotes, err := GetDexQuotes(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+	best := quotes[0]
 	if best.RegisterOrder != nil {
 		if err := best.RegisterOrder(ctx); err != nil {
 			return nil, fmt.Errorf("could not register selected DEX order: %w", err)

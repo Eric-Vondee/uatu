@@ -75,6 +75,7 @@ func (s *Server) quoteRoutes(r chi.Router) {
 		priceCache: s.priceCache,
 	}
 	r.Post("/", WrapHTTPHandler(s.logger, quote.CreateQuote, s.cfg, "CreateQuote"))
+	r.Post("/routes", WrapHTTPHandler(s.logger, quote.GetQuotes, s.cfg, "GetQuotes"))
 }
 
 func (s *Server) chainRoutes(r chi.Router) {
