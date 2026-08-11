@@ -10,28 +10,6 @@ definitions:
     required:
     - message
     type: object
-  server.quoteRequest:
-    properties:
-      amount:
-        type: string
-      chain:
-        type: string
-      chainId:
-        type: integer
-      recipientAddress:
-        type: string
-      tokenIn:
-        type: string
-      tokenOut:
-        type: string
-    required:
-    - amount
-    - chain
-    - chainId
-    - recipientAddress
-    - tokenIn
-    - tokenOut
-    type: object
   uatu.Actions:
     properties:
       amount:
@@ -107,8 +85,16 @@ definitions:
         $ref: '#/definitions/uatu.Token'
       baseTokenAddress:
         type: string
+      baseTokenBalance:
+        type: string
       dexName:
         type: string
+      isActivePool:
+        type: boolean
+      liquidity:
+        $ref: '#/definitions/uatu.PoolLiquidity'
+      liquidityInUsd:
+        $ref: '#/definitions/uatu.PoolLiquidityUSD'
       marketCap:
         type: string
       name:
@@ -123,10 +109,28 @@ definitions:
         $ref: '#/definitions/uatu.Token'
       quoteTokenAddress:
         type: string
+      quoteTokenBalance:
+        type: string
       symbol:
         type: string
       tickSpacing:
         type: integer
+    type: object
+  uatu.PoolLiquidity:
+    properties:
+      baseTokenBalance:
+        type: string
+      quoteTokenBalance:
+        type: string
+    type: object
+  uatu.PoolLiquidityUSD:
+    properties:
+      baseTokenBalance:
+        type: string
+      quoteTokenBalance:
+        type: string
+      totalPoolBalance:
+        type: string
     type: object
   uatu.Quote:
     properties:
@@ -154,10 +158,14 @@ definitions:
         type: string
       originChainId:
         type: integer
+      pairAddress:
+        type: string
       quoteId:
         type: string
       recipientAddress:
         type: string
+      route:
+        $ref: '#/definitions/uatu.Route'
       status:
         enum:
         - pending
@@ -177,6 +185,50 @@ definitions:
       walletAddress:
         type: string
     type: object
+  uatu.QuoteRequest:
+    properties:
+      amount:
+        type: string
+      chain:
+        type: string
+      chainId:
+        type: integer
+      recipientAddress:
+        type: string
+      tokenIn:
+        type: string
+      tokenOut:
+        type: string
+    required:
+    - amount
+    - chain
+    - chainId
+    - recipientAddress
+    - tokenIn
+    - tokenOut
+    type: object
+  uatu.Route:
+    properties:
+      dex:
+        type: string
+      logo:
+        type: string
+      name:
+        type: string
+    type: object
+  uatu.RouteQuote:
+    properties:
+      amountIn:
+        type: string
+      amountOut:
+        type: string
+      route:
+        $ref: '#/definitions/uatu.Route'
+      tokenIn:
+        $ref: '#/definitions/uatu.Token'
+      tokenOut:
+        $ref: '#/definitions/uatu.Token'
+    type: object
   uatu.Token:
     properties:
       address:
@@ -185,6 +237,8 @@ definitions:
         type: integer
       decimals:
         type: integer
+      isStableCoin:
+        type: boolean
       logo:
         type: string
       name:
@@ -319,7 +373,7 @@ paths:
         name: message
         required: true
         schema:
-          $ref: '#/definitions/server.quoteRequest'
+          $ref: '#/definitions/uatu.QuoteRequest'
       produces:
       - application/json
       responses:
@@ -341,6 +395,44 @@ paths:
           schema:
             $ref: '#/definitions/server.APIResponse'
       summary: Create a swap quote
+      tags:
+      - quotes
+  /quotes/routes:
+    post:
+      consumes:
+      - application/json
+      description: Prices a swap against every supported DEX and returns the valid
+        routes ordered by output amount.
+      parameters:
+      - description: request body to compare DEX quotes
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/uatu.QuoteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/server.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/uatu.RouteQuote'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/server.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/server.APIResponse'
+      summary: List DEX quote options
       tags:
       - quotes
 schemes:
