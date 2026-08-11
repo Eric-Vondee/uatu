@@ -527,5 +527,6 @@ func (c *Client) CowSwap(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRes
 		RegisterOrder: func(ctx context.Context) error {
 			return cow.PlaceOrder(ctx, network, order, d.WalletAddress, quoteID, uid)
 		},
+		Route: DexRoutes["cowswap"],
 	}, nil
 }

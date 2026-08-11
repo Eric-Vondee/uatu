@@ -184,7 +184,6 @@ func (c *Client) Aerodrome(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexR
 	if tokenIn != pool.Token0 && tokenIn != pool.Token1 {
 		return nil, fmt.Errorf("token %s is not in pool %s", d.TokenIn, d.PairAddress)
 	}
-	// Aerodrome's concentrated pools are keyed by tick spacing, not by fee.
 	amountOut, err := c.getAerodromeAmountsOut(
 		ctx,
 		d.AmountIn, quoterAddress,
@@ -212,5 +211,6 @@ func (c *Client) Aerodrome(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexR
 		Dex:                  d.Dex,
 		RouterAddress:        routerAddress,
 		PairAddress:          d.PairAddress,
+		Route:                DexRoutes["aerodrome"],
 	}, nil
 }
