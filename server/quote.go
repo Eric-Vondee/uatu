@@ -34,7 +34,7 @@ func newQuoteID() string {
 }
 
 func Deadline() *big.Int {
-	quoteTTL := 5 * time.Minute
+	quoteTTL := time.Minute
 	return big.NewInt(time.Now().Add(quoteTTL).Unix())
 }
 
@@ -207,10 +207,12 @@ func (q *quoteHandler) GetQuotes(
 	}
 
 	quotes := make([]uatu.RouteQuote, 0, len(responses))
+	deadline := Deadline()
 	for _, response := range responses {
 		quotes = append(quotes, uatu.RouteQuote{
 			AmountIn:  response.AmountIn.String(),
 			AmountOut: response.AmountOut.String(),
+			Deadline:  deadline,
 			TokenIn:   tokenIn,
 			TokenOut:  tokenOut,
 			Route:     response.Route,

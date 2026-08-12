@@ -45,11 +45,12 @@ type QuoteResponse struct {
 
 // RouteQuote is a non-persisted quote option for a direct DEX route.
 type RouteQuote struct {
-	AmountIn  string `json:"amountIn"`
-	AmountOut string `json:"amountOut"`
-	TokenIn   Token  `json:"tokenIn"`
-	TokenOut  Token  `json:"tokenOut"`
-	Route     Route  `json:"route"`
+	AmountIn  string   `json:"amountIn"`
+	AmountOut string   `json:"amountOut"`
+	Deadline  *big.Int `json:"deadline" swaggertype:"integer"`
+	TokenIn   Token    `json:"tokenIn"`
+	TokenOut  Token    `json:"tokenOut"`
+	Route     Route    `json:"route"`
 }
 
 type Quote struct {
