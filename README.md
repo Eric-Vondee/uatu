@@ -39,6 +39,7 @@ Domain models (`Chain`, `Token`, `Dex`, `Pool`, `Quote`) live in the root
 
 - Go 1.26+
 - PostgreSQL
+- Redis
 - An RPC endpoint per chain you intend to support
 
 ## Configuration
@@ -50,13 +51,14 @@ The `.env` file is a convenience for local development and is entirely optional.
 Anywhere the environment already supplies these values — a container, or a
 systemd unit using `EnvironmentFile=` — no file needs to exist on disk.
 
-| Variable | Purpose |
-| --- | --- |
-| `PORT` | HTTP listen port |
-| `POSTGRES_DSN` | Postgres connection string |
-| `<CHAIN>_RPC_URL` | RPC endpoint per chain (e.g. `ETHEREUM_RPC_URL`) |
-| `OTEL_ENABLED` | Toggle OpenTelemetry export |
-| `OTEL_ENDPOINT`, `OTEL_USE_TLS`, `OTEL_HEADERS` | OTLP exporter settings |
+| Variable                                        | Purpose                                              |
+| ----------------------------------------------- | ---------------------------------------------------- |
+| `PORT`                                          | HTTP listen port                                     |
+| `POSTGRES_DSN`                                  | Postgres connection string                           |
+| `REDIS_DSN`                                     | Redis connection URL, e.g. `redis://localhost:6379/` |
+| `<CHAIN>_RPC_URL`                               | RPC endpoint per chain (e.g. `ETHEREUM_RPC_URL`)     |
+| `OTEL_ENABLED`                                  | Toggle OpenTelemetry export                          |
+| `OTEL_ENDPOINT`, `OTEL_USE_TLS`, `OTEL_HEADERS` | OTLP exporter settings                               |
 
 All fields are validated at startup; the process exits if any required value is
 missing.

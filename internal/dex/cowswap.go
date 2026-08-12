@@ -406,7 +406,7 @@ func cowAmount(field, value string) (*big.Int, error) {
 // transactions that authorise it. The order is posted through RegisterOrder only
 // after this response wins route selection; otherwise every candidate quote
 // would leave an unused order in CoW's orderbook.
-func (c *Client) SwapCow(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {
+func (c *Client) CowSwap(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {
 	network, ok := cowNetworks[d.ChainId]
 	if !ok {
 		return nil, fmt.Errorf("cowswap is not deployed on chain %d", d.ChainId)
@@ -443,7 +443,7 @@ func (c *Client) SwapCow(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRes
 	if err != nil {
 		return nil, err
 	}
-	if quote.Expiration.IsZero() == false && !time.Now().Before(quote.Expiration) {
+	if !quote.Expiration.IsZero() && !time.Now().Before(quote.Expiration) {
 		return nil, fmt.Errorf("cow quote expired at %s", quote.Expiration.UTC().Format(time.RFC3339Nano))
 	}
 	if quote.Expiration.IsZero() {
@@ -523,13 +523,10 @@ func (c *Client) SwapCow(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRes
 		EncodedData:          preSignCalldata,
 		EncodedERC20Approval: erc20Approval,
 		Dex:                  d.Dex,
-		RouterAddress:        settlement.Hex(),
+		RouterAddress:        settlement,
 		RegisterOrder: func(ctx context.Context) error {
 			return cow.PlaceOrder(ctx, network, order, d.WalletAddress, quoteID, uid)
 		},
+		Route: routeWithFee(DexRoutes["cowswap"], feeAmount),
 	}, nil
-}
-
-func (c *Client) BuyCow(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {
-	return c.SwapCow(ctx, d)
 }

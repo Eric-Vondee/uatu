@@ -9,15 +9,17 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"github.com/uatu"
 	"github.com/uatu/config"
+	redisstore "github.com/uatu/internal/storage/redis"
 	_ "github.com/uatu/swagger"
 	"go.uber.org/zap"
 )
 
 type Server struct {
-	cfg    config.Config
-	logger *zap.Logger
-	quotes uatu.QuoteRepository
-	chains uatu.ChainRepository
+	cfg        config.Config
+	logger     *zap.Logger
+	quotes     uatu.QuoteRepository
+	chains     uatu.ChainRepository
+	priceCache *redisstore.RedisService
 }
 
 func New(
@@ -25,12 +27,14 @@ func New(
 	logger *zap.Logger,
 	quotes uatu.QuoteRepository,
 	chains uatu.ChainRepository,
+	priceCache *redisstore.RedisService,
 ) *Server {
 	return &Server{
-		cfg:    cfg,
-		logger: logger,
-		quotes: quotes,
-		chains: chains,
+		cfg:        cfg,
+		logger:     logger,
+		quotes:     quotes,
+		chains:     chains,
+		priceCache: priceCache,
 	}
 }
 
@@ -42,6 +46,7 @@ func (s *Server) Run() error {
 		AllowedOrigins:   s.cfg.AllowedOrigins,
 		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		ExposedHeaders:   []string{"X-Request-ID", "X-Trace-ID"},
 		AllowCredentials: false,
 		MaxAge:           86400,
 	}))
@@ -64,11 +69,13 @@ func (s *Server) Run() error {
 
 func (s *Server) quoteRoutes(r chi.Router) {
 	quote := &quoteHandler{
-		cfg:       s.cfg,
-		quoteRepo: s.quotes,
-		chainRepo: s.chains,
+		cfg:        s.cfg,
+		quoteRepo:  s.quotes,
+		chainRepo:  s.chains,
+		priceCache: s.priceCache,
 	}
 	r.Post("/", WrapHTTPHandler(s.logger, quote.CreateQuote, s.cfg, "CreateQuote"))
+	r.Post("/routes", WrapHTTPHandler(s.logger, quote.GetQuotes, s.cfg, "GetQuotes"))
 }
 
 func (s *Server) chainRoutes(r chi.Router) {

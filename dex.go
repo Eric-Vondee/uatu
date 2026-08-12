@@ -39,11 +39,21 @@ type IDexRequest struct {
 	PoolType                                      string
 }
 
+type Route struct {
+	Name string `json:"name"`
+	Logo string `json:"logo"`
+	Dex  string `json:"dex"`
+	// Fees is the route fee in the input token's smallest unit.
+	Fees string `json:"fees"`
+}
+
 type IDexResponse struct {
 	AmountIn, AmountOut                                       *big.Int
 	EncodedData, EncodedERC20Approval, EncodedPermit2Approval []byte
 
 	Dex           Dex
-	RouterAddress string
-	RegisterOrder func(context.Context) error `json:"-"`
+	RouterAddress common.Address
+	PairAddress   common.Address
+	RegisterOrder func(context.Context) error
+	Route         Route
 }

@@ -5,6 +5,7 @@
   "blockExplorer": "https://explorer.chain.robinhood.com",
   "rpcUrl": "https://rpc.mainnet.chain.robinhood.com",
   "nativeToken": "ETH",
+  "blockChainLogo": "https://pub-4d104cbff77a46759432960f97284660.r2.dev/blockchains/robinhood.png",
   "tokens": [
     {
       "name": "ETHER",
@@ -12,7 +13,8 @@
       "address": "0x0000000000000000000000000000000000000000",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
-      "slug": "eth"
+      "slug": "eth",
+      "isStableCoin": false
     },
     {
       "name": "Wrapped Ether",
@@ -20,7 +22,8 @@
       "address": "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
-      "slug": "weth"
+      "slug": "weth",
+      "isStableCoin": false
     },
     {
       "name": "Ethena USDe",
@@ -28,7 +31,8 @@
       "address": "0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usde.png",
-      "slug": "usde"
+      "slug": "usde",
+      "isStableCoin": true
     },
     {
       "name": "Global Dollar",
@@ -36,7 +40,8 @@
       "address": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
       "decimals": 6,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdg.svg",
-      "slug": "usdg"
+      "slug": "usdg",
+      "isStableCoin": true
     }
   ],
   "dex": [

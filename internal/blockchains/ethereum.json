@@ -5,6 +5,7 @@
   "blockExplorer": "https://etherscan.io",
   "rpcUrl": "https://ethereum-rpc.publicnode.com",
   "nativeToken": "ETH",
+  "blockChainLogo": "https://pub-4d104cbff77a46759432960f97284660.r2.dev/blockchains/ethereum-eth-logo.svg",
   "tokens": [
     {
       "name": "ETHER",
@@ -12,7 +13,8 @@
       "address": "0x0000000000000000000000000000000000000000",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
-      "slug": "eth"
+      "slug": "eth",
+      "isStableCoin": false
     },
     {
       "name": "Wrapped Ether",
@@ -20,7 +22,8 @@
       "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
-      "slug": "weth"
+      "slug": "weth",
+      "isStableCoin": false
     },
     {
       "name": "Tether",
@@ -28,7 +31,8 @@
       "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
       "decimals": 6,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt.svg",
-      "slug": "usdt"
+      "slug": "usdt",
+      "isStableCoin": true
     },
     {
       "name": "USDC",
@@ -36,7 +40,8 @@
       "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
       "decimals": 6,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdc.svg",
-      "slug": "usdc"
+      "slug": "usdc",
+      "isStableCoin": true
     },
     {
       "name": "DAI",
@@ -44,7 +49,8 @@
       "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/dai.svg",
-      "slug": "dai"
+      "slug": "dai",
+      "isStableCoin": true
     },
     {
       "name": "Wrapped BTC",
@@ -52,7 +58,8 @@
       "address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
       "decimals": 8,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/wbtc.svg",
-      "slug": "wbtc"
+      "slug": "wbtc",
+      "isStableCoin": false
     }
   ],
   "dex": [

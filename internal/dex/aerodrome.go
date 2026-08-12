@@ -155,7 +155,7 @@ func encodeExactInputSingle(
 	return calldata, nil
 }
 
-func (c *Client) SwapAerodrome(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {
+func (c *Client) Aerodrome(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {
 	tokenIn := d.TokenIn
 	quoterAddress := uatu.FormatEvmAddress(d.Dex.V3QuoterAddress)
 	routerAddress := uatu.FormatEvmAddress(d.Dex.V3RouterAddress)
@@ -184,7 +184,6 @@ func (c *Client) SwapAerodrome(ctx context.Context, d uatu.IDexRequest) (*uatu.I
 	if tokenIn != pool.Token0 && tokenIn != pool.Token1 {
 		return nil, fmt.Errorf("token %s is not in pool %s", d.TokenIn, d.PairAddress)
 	}
-	// Aerodrome's concentrated pools are keyed by tick spacing, not by fee.
 	amountOut, err := c.getAerodromeAmountsOut(
 		ctx,
 		d.AmountIn, quoterAddress,
@@ -210,6 +209,8 @@ func (c *Client) SwapAerodrome(ctx context.Context, d uatu.IDexRequest) (*uatu.I
 		EncodedData:          swapCallData,
 		EncodedERC20Approval: enodedERC20TokenApproval,
 		Dex:                  d.Dex,
-		RouterAddress:        d.Dex.V3RouterAddress,
+		RouterAddress:        routerAddress,
+		PairAddress:          d.PairAddress,
+		Route:                routeWithFee(DexRoutes["aerodrome"], poolFeeAmount(d.AmountIn, pool.Fee)),
 	}, nil
 }

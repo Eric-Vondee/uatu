@@ -193,7 +193,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/server.quoteRequest"
+                            "$ref": "#/definitions/uatu.QuoteRequest"
                         }
                     }
                 ],
@@ -210,6 +210,67 @@ const docTemplate = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/uatu.Quote"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/server.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/server.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/quotes/routes": {
+            "post": {
+                "description": "Prices a swap against every supported DEX and returns the valid routes ordered by output amount.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quotes"
+                ],
+                "summary": "List DEX quote options",
+                "parameters": [
+                    {
+                        "description": "request body to compare DEX quotes",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/uatu.QuoteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/server.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/uatu.RouteQuote"
+                                            }
                                         }
                                     }
                                 }
@@ -248,37 +309,6 @@ const docTemplate = `{
                 }
             }
         },
-        "server.quoteRequest": {
-            "type": "object",
-            "required": [
-                "amount",
-                "chain",
-                "chainId",
-                "recipientAddress",
-                "tokenIn",
-                "tokenOut"
-            ],
-            "properties": {
-                "amount": {
-                    "type": "string"
-                },
-                "chain": {
-                    "type": "string"
-                },
-                "chainId": {
-                    "type": "integer"
-                },
-                "recipientAddress": {
-                    "type": "string"
-                },
-                "tokenIn": {
-                    "type": "string"
-                },
-                "tokenOut": {
-                    "type": "string"
-                }
-            }
-        },
         "uatu.Actions": {
             "type": "object",
             "properties": {
@@ -308,6 +338,9 @@ const docTemplate = `{
         "uatu.Chain": {
             "type": "object",
             "properties": {
+                "blockChainLogo": {
+                    "type": "string"
+                },
                 "blockExplorer": {
                     "type": "string"
                 },
@@ -393,8 +426,20 @@ const docTemplate = `{
                 "baseTokenAddress": {
                     "type": "string"
                 },
+                "baseTokenBalance": {
+                    "type": "string"
+                },
                 "dexName": {
                     "type": "string"
+                },
+                "isActivePool": {
+                    "type": "boolean"
+                },
+                "liquidity": {
+                    "$ref": "#/definitions/uatu.PoolLiquidity"
+                },
+                "liquidityInUsd": {
+                    "$ref": "#/definitions/uatu.PoolLiquidityUSD"
                 },
                 "marketCap": {
                     "type": "string"
@@ -417,11 +462,39 @@ const docTemplate = `{
                 "quoteTokenAddress": {
                     "type": "string"
                 },
+                "quoteTokenBalance": {
+                    "type": "string"
+                },
                 "symbol": {
                     "type": "string"
                 },
                 "tickSpacing": {
                     "type": "integer"
+                }
+            }
+        },
+        "uatu.PoolLiquidity": {
+            "type": "object",
+            "properties": {
+                "baseTokenBalance": {
+                    "type": "string"
+                },
+                "quoteTokenBalance": {
+                    "type": "string"
+                }
+            }
+        },
+        "uatu.PoolLiquidityUSD": {
+            "type": "object",
+            "properties": {
+                "baseTokenBalance": {
+                    "type": "string"
+                },
+                "quoteTokenBalance": {
+                    "type": "string"
+                },
+                "totalPoolBalance": {
+                    "type": "string"
                 }
             }
         },
@@ -464,11 +537,17 @@ const docTemplate = `{
                 "originChainId": {
                     "type": "integer"
                 },
+                "pairAddress": {
+                    "type": "string"
+                },
                 "quoteId": {
                     "type": "string"
                 },
                 "recipientAddress": {
                     "type": "string"
+                },
+                "route": {
+                    "$ref": "#/definitions/uatu.Route"
                 },
                 "status": {
                     "type": "string",
@@ -498,6 +577,79 @@ const docTemplate = `{
                 }
             }
         },
+        "uatu.QuoteRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "chain",
+                "chainId",
+                "recipientAddress",
+                "tokenIn",
+                "tokenOut"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "string"
+                },
+                "chain": {
+                    "type": "string"
+                },
+                "chainId": {
+                    "type": "integer"
+                },
+                "recipientAddress": {
+                    "type": "string"
+                },
+                "tokenIn": {
+                    "type": "string"
+                },
+                "tokenOut": {
+                    "type": "string"
+                }
+            }
+        },
+        "uatu.Route": {
+            "type": "object",
+            "properties": {
+                "dex": {
+                    "type": "string"
+                },
+                "fees": {
+                    "description": "Fee in the input token's smallest unit.",
+                    "type": "string"
+                },
+                "logo": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "uatu.RouteQuote": {
+            "type": "object",
+            "properties": {
+                "amountIn": {
+                    "type": "string"
+                },
+                "amountOut": {
+                    "type": "string"
+                },
+                "deadline": {
+                    "description": "Unix timestamp when this route quote expires.",
+                    "type": "integer"
+                },
+                "route": {
+                    "$ref": "#/definitions/uatu.Route"
+                },
+                "tokenIn": {
+                    "$ref": "#/definitions/uatu.Token"
+                },
+                "tokenOut": {
+                    "$ref": "#/definitions/uatu.Token"
+                }
+            }
+        },
         "uatu.Token": {
             "type": "object",
             "properties": {
@@ -509,6 +661,9 @@ const docTemplate = `{
                 },
                 "decimals": {
                     "type": "integer"
+                },
+                "isStableCoin": {
+                    "type": "boolean"
                 },
                 "logo": {
                     "type": "string"

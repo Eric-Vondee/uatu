@@ -124,9 +124,15 @@ func lookupPools(client *dex.Client, chain uatu.Chain, j poolJob) []uatu.Pool {
 			err   error
 		)
 		switch j.d.Slug {
-		case "uniswap", "pancakeswap", "oku":
+		case "agni", "uniswap", "pancakeswap", "oku":
 			var found []dex.V3Pair
 			found, err = client.GetV3Pair(factoryAddress, tokenIn, tokenOut)
+			for _, p := range found {
+				pairs = append(pairs, clPair{address: p.PairAddress, fee: p.Fee})
+			}
+		case "quickswap":
+			var found []dex.V3Pair
+			found, err = client.GetQuickSwapV3Pair(factoryAddress, tokenIn, tokenOut)
 			for _, p := range found {
 				pairs = append(pairs, clPair{address: p.PairAddress, fee: p.Fee})
 			}
@@ -186,12 +192,13 @@ func newPool(
 		PoolFee:           fee,
 		PoolType:          poolType,
 		TickSpacing:       tickSpacing,
+		IsActivePool:      true,
 	}
 }
 
 func hasSwapDex(c uatu.Chain) bool {
 	for _, d := range c.Dex {
-		if d.Slug == "uniswap" || d.Slug == "pancakeswap" {
+		if d.Slug == "agni" || d.Slug == "uniswap" || d.Slug == "pancakeswap" {
 			return true
 		}
 	}
@@ -233,6 +240,7 @@ func createBlockchains(ctx context.Context, db *bun.DB, chains []uatu.Chain) err
 		Set("symbol = EXCLUDED.symbol").
 		Set("block_explorer_url = EXCLUDED.block_explorer_url").
 		Set("native_token = EXCLUDED.native_token").
+		Set("blockchain_logo = EXCLUDED.blockchain_logo").
 		Set("tokens = EXCLUDED.tokens").
 		Set("dex = EXCLUDED.dex").
 		Set("slug = EXCLUDED.slug").

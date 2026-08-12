@@ -5,6 +5,7 @@
   "blockExplorer": "https://mantlescan.xyz",
   "rpcUrl": "https://mantle-rpc.publicnode.com",
   "nativeToken": "MNT",
+  "blockChainLogo": "https://pub-4d104cbff77a46759432960f97284660.r2.dev/blockchains/mantle.png",
   "tokens": [
     {
       "name": "Mantle",
@@ -12,7 +13,8 @@
       "address": "0x0000000000000000000000000000000000000000",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/mantle.png",
-      "slug": "mnt"
+      "slug": "mnt",
+      "isStableCoin": false
     },
     {
       "name": "Wrapped Mantle",
@@ -20,7 +22,8 @@
       "address": "0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/mantle.png",
-      "slug": "wmnt"
+      "slug": "wmnt",
+      "isStableCoin": false
     },
     {
       "name": "Tether",
@@ -28,7 +31,17 @@
       "address": "0x201EBa5CC46D216Ce6DC03F6a759e8E766e956aE",
       "decimals": 6,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt.svg",
-      "slug": "usdt"
+      "slug": "usdt",
+      "isStableCoin": true
+    },
+    {
+      "name": "USDT0 (USD₮0)",
+      "symbol": "USDT0",
+      "address": "0x779Ded0c9e1022225f8E0630b35a9b54bE713736",
+      "decimals": 6,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt0.svg",
+      "slug": "usdt0",
+      "isStableCoin": true
     },
     {
       "name": "USDC",
@@ -36,7 +49,8 @@
       "address": "0x09Bc4E0D864854c6aFB6eB9A9cdF58aC190D0dF9",
       "decimals": 6,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdc.svg",
-      "slug": "usdc"
+      "slug": "usdc",
+      "isStableCoin": true
     },
     {
       "name": "Wrapped Ether",
@@ -44,17 +58,21 @@
       "address": "0xdEAddEaDdeadDEadDEADDEAddEADDEAddead1111",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
-      "slug": "weth"
+      "slug": "weth",
+      "isStableCoin": false
     }
   ],
   "dex":  [
     {
-      "name": "Merchant Moe",
-      "universalRouterAddress": "0x...",
-      "quoterAddress": "0x...",
-      "factoryAddress": "0x...",
-      "routerAddress": "0x...",
-      "slug": "merchant"
+      "name": "Agni Finance",
+      "v2RouterAddress": "",
+      "v2FactoryAddress": "",
+      "v3FactoryAddress": "0x25780dc8Fc3cfBD75F33bFDAB65e969b603b2035",
+      "v3RouterAddress": "0x319B69888b0d11cEC22caA5034e25FfFBDc88421",
+      "v3QuoterAddress": "0xc4aaDc921E1cdb66c5300Bc158a313292923C0cb",
+      "permit2Address": "",
+      "universalRouterAddress": "",
+      "slug": "agni"
     }
   ],
   "slug": "mantle",

@@ -23,6 +23,7 @@ type Token struct {
 	Logo         string    `bun:"logo,notnull" json:"logo"`
 	Slug         string    `bun:"slug,notnull" json:"slug"`
 	BlockchainID uint      `bun:"blockchain_id,notnull" json:"blockchainId"`
+	IsStableCoin bool      `bun:"is_stable_coin,notnull" json:"isStableCoin"`
 	CreatedAt    time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp" json:"-"`
 	UpdatedAt    time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp" json:"-"`
 
@@ -37,6 +38,7 @@ type Chain struct {
 	BlockExplorer string    `bun:"block_explorer_url,notnull" json:"blockExplorer"`
 	RpcUrl        string    `bun:"-" json:"rpcUrl"`
 	NativeToken   string    `bun:"native_token,notnull" json:"nativeToken"`
+	Logo          string    `bun:"blockchain_logo,notnull" json:"blockChainLogo"`
 	Tokens        []Token   `bun:"tokens,type:jsonb,notnull" json:"tokens"`
 	Dex           []Dex     `bun:"dex,type:jsonb,notnull" json:"dex"`
 	Slug          string    `bun:"slug,notnull" json:"slug"`
@@ -48,18 +50,20 @@ type Chain struct {
 }
 
 type QueryOptions struct {
-	TokenIn     string
-	TokenOut    string
-	PairAddress string
-	ChainID     uint
-	DexName     string
-	Slug        string
+	TokenIn         string
+	TokenOut        string
+	PairAddress     string
+	ChainID         uint
+	DexName         string
+	Slug            string
+	IncludeInactive bool
 }
 type ChainRepository interface {
 	GetBlockchains(ctx context.Context) ([]Chain, error)
 	GetBlockchain(ctx context.Context, opts QueryOptions) (Chain, error)
 	GetTokens(ctx context.Context, opts QueryOptions) ([]Token, error)
 	GetPools(ctx context.Context, opts QueryOptions) ([]Pool, error)
+	UpdatePoolLiquidity(ctx context.Context, pool *Pool) error
 	GetDex(ctx context.Context, opts QueryOptions) (Dex, error)
 }
 

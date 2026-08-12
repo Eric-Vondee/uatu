@@ -13,13 +13,17 @@ import (
 type PostgresConfig struct {
 	DSN string `mapstructure:"POSTGRES_DSN"`
 }
+type RedisConfig struct {
+	DSN string `mapstructure:"REDIS_DSN"`
+}
 type Config struct {
-	AllowedOrigins []string `mapstructure:"ALLOWED_ORIGINS" validate:"required"`
-	PORT           string   `mapstructure:"PORT" validate:"required"`
+	AllowedOrigins []string    `mapstructure:"ALLOWED_ORIGINS" validate:"required"`
+	PORT           string      `mapstructure:"PORT" validate:"required"`
+	Redis          RedisConfig `mapstructure:",squash" validate:"required"`
 	Otel           struct {
 		IsEnabled bool   `mapstructure:"OTEL_ENABLED"`
 		Endpoint  string `mapstructure:"OTEL_ENDPOINT" validate:"required"`
-		UseTLS    bool   `mapstructure:"OTEL_USE_TLS" validate:"required"`
+		UseTLS    bool   `mapstructure:"OTEL_USE_TLS"`
 		Headers   string `mapstructure:"OTEL_HEADERS" validate:"required"`
 	} `mapstructure:",squash"`
 	Database struct {

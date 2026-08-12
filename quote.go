@@ -29,9 +29,33 @@ type Actions struct {
 	ChainID uint   `json:"chainId,omitempty"`
 }
 
+type QuoteRequest struct {
+	Amount           decimal.Decimal `json:"amount" validate:"required" swaggertype:"string"`
+	Chain            string          `json:"chain" validate:"required"`
+	ChainID          uint            `json:"chainId" validate:"required"`
+	RecipientAddress string          `json:"recipientAddress" validate:"required"`
+	TokenIn          string          `json:"tokenIn" validate:"required"`
+	TokenOut         string          `json:"tokenOut" validate:"required"`
+	GenericRequest
+}
+
+type QuoteResponse struct {
+	Quote
+}
+
+// RouteQuote is a non-persisted quote option for a direct DEX route.
+type RouteQuote struct {
+	AmountIn  string   `json:"amountIn"`
+	AmountOut string   `json:"amountOut"`
+	Deadline  *big.Int `json:"deadline" swaggertype:"integer"`
+	TokenIn   Token    `json:"tokenIn"`
+	TokenOut  Token    `json:"tokenOut"`
+	Route     Route    `json:"route"`
+}
+
 type Quote struct {
 	ID                 uuid.UUID         `bun:"type:uuid,default:uuid_v4(),pk" json:"-"`
-	QuoteId            string            `bun:"quote_id,notnull,unique" json:"quoteId"`
+	QuoteID            string            `bun:"quote_id,notnull,unique" json:"quoteId"`
 	AmountIn           string            `bun:"amount_in,notnull,type:numeric(78,0)" json:"amountIn"`
 	AmountOut          string            `bun:"amount_out,notnull,type:numeric(78,0)" json:"amountOut"`
 	AmountInFloat      decimal.Decimal   `bun:"amount_in_float" json:"amountInFloat" swaggertype:"string"`
@@ -44,10 +68,12 @@ type Quote struct {
 	RecipientAddress   string            `bun:"recipient_address,notnull" json:"recipientAddress"`
 	TokenIn            Token             `bun:"type:jsonb,notnull" json:"tokenIn"`
 	TokenOut           Token             `bun:"type:jsonb,notnull" json:"tokenOut"`
+	PairAddress        string            `bun:"type:pair_address" json:"pairAddress"`
 	Hash               string            `bun:"hash" json:"hash,omitempty"`
 	ExplorerUrl        string            `bun:"explorer_url" json:"explorerUrl,omitempty"`
 	Steps              []Actions         `bun:"steps,notnull" json:"steps"`
 	Status             TransactionStatus `bun:"type:varchar(100),default:'pending',notnull" json:"status" swaggertype:"string" enums:"pending,completed,failed"`
+	Route              Route             `bun:"type:jsonb,notnull" json:"route"`
 	Deadline           *big.Int          `bun:"deadline,notnull" json:"deadline" swaggertype:"integer"`
 	CreatedAt          time.Time         `bun:"created_at,notnull" json:"createdAt"`
 	UpdatedAt          time.Time         `bun:"updated_at,notnull" json:"updatedAt"`

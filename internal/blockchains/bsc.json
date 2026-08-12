@@ -5,6 +5,7 @@
   "blockExplorer": "https://bscscan.com",
   "rpcUrl": "https://bsc-rpc.publicnode.com",
   "nativeToken": "BNB",
+  "blockChainLogo": "https://pub-4d104cbff77a46759432960f97284660.r2.dev/blockchains/bnb.png",
   "tokens": [
     {
       "name": "BNB",
@@ -12,7 +13,8 @@
       "address": "0x0000000000000000000000000000000000000000",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/bnb.png",
-      "slug": "bnb"
+      "slug": "bnb",
+      "isStableCoin": false
     },
     {
       "name": "Wrapped BNB",
@@ -20,7 +22,8 @@
       "address": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/bnb.png",
-      "slug": "wbnb"
+      "slug": "wbnb",
+      "isStableCoin": false
     },
     {
       "name": "Tether",
@@ -28,7 +31,8 @@
       "address": "0x55d398326f99059fF775485246999027B3197955",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdt.svg",
-      "slug": "usdt"
+      "slug": "usdt",
+      "isStableCoin": true
     },
     {
       "name": "USDC",
@@ -36,7 +40,8 @@
       "address": "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/usdc.svg",
-      "slug": "usdc"
+      "slug": "usdc",
+      "isStableCoin": true
     },
     {
       "name": "DAI",
@@ -44,7 +49,8 @@
       "address": "0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/dai.svg",
-      "slug": "dai"
+      "slug": "dai",
+      "isStableCoin": true
     },
     {
       "name": "Binance-Peg Ethereum",
@@ -52,7 +58,8 @@
       "address": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
       "decimals": 18,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
-      "slug": "weth"
+      "slug": "weth",
+      "isStableCoin": false
     },
     {
       "name": "Wrapped BTC",
@@ -60,7 +67,8 @@
       "address": "0x39665e85a68a4d7328b8799135E2ff301a0Ca86f",
       "decimals": 8,
       "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/wbtc.svg",
-      "slug": "wbtc"
+      "slug": "wbtc",
+      "isStableCoin": false
     }
   ],
   "dex": [

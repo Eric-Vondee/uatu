@@ -16,31 +16,16 @@ import (
 	"github.com/uatu"
 	"github.com/uatu/config"
 	"github.com/uatu/internal/dex"
+	redisstore "github.com/uatu/internal/storage/redis"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
-type GenericRequest struct{}
-
-func (g GenericRequest) Bind(_ *http.Request) error { return nil }
-
 type quoteHandler struct {
-	cfg       config.Config
-	quoteRepo uatu.QuoteRepository
-	chainRepo uatu.ChainRepository
-}
-
-// quoteRequest is the body accepted by POST /quotes. Amounts are given in
-// human units (not base units); token fields take checksummed or lowercase
-// EVM addresses.
-type quoteRequest struct {
-	Amount           decimal.Decimal `json:"amount" validate:"required" swaggertype:"string"`
-	Chain            string          `json:"chain" validate:"required"`
-	ChainID          uint            `json:"chainId" validate:"required"`
-	RecipientAddress string          `json:"recipientAddress" validate:"required"`
-	TokenIn          string          `json:"tokenIn" validate:"required"`
-	TokenOut         string          `json:"tokenOut" validate:"required"`
-	GenericRequest
+	cfg        config.Config
+	quoteRepo  uatu.QuoteRepository
+	chainRepo  uatu.ChainRepository
+	priceCache *redisstore.RedisService
 }
 
 func newQuoteID() string {
@@ -49,7 +34,7 @@ func newQuoteID() string {
 }
 
 func Deadline() *big.Int {
-	quoteTTL := 5 * time.Minute
+	quoteTTL := time.Minute
 	return big.NewInt(time.Now().Add(quoteTTL).Unix())
 }
 
@@ -64,7 +49,7 @@ func Deadline() *big.Int {
 // @Tags quotes
 // @Accept json
 // @Produce json
-// @Param message body quoteRequest true "request body to create a swap quote"
+// @Param message body uatu.QuoteRequest true "request body to create a swap quote"
 // @Success 200 {object} APIResponse{data=uatu.Quote}
 // @Failure 400 {object} APIResponse
 // @Failure 500 {object} APIResponse
@@ -76,7 +61,8 @@ func (q *quoteHandler) CreateQuote(
 	w http.ResponseWriter,
 	r *http.Request,
 ) (render.Renderer, error) {
-	req := new(quoteRequest)
+	req := new(uatu.QuoteRequest)
+
 	if err := render.Bind(r, req); err != nil {
 		return nil, err
 	}
@@ -96,8 +82,12 @@ func (q *quoteHandler) CreateQuote(
 		}, err
 	}
 
-	tokenIn, _ := getToken(chain.Tokens, uatu.FormatEvmAddress(req.TokenIn))
-	tokenOut, _ := getToken(chain.Tokens, uatu.FormatEvmAddress(req.TokenOut))
+	tokenIn, tokenOut, err := getTokenInAndOut(chain.Tokens, req.TokenIn, req.TokenOut)
+	if err != nil {
+		return APIError{
+			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
+		}, err
+	}
 
 	pools, err := q.chainRepo.GetPools(ctx, uatu.QueryOptions{
 		TokenIn:  tokenIn.Address,
@@ -113,14 +103,17 @@ func (q *quoteHandler) CreateQuote(
 
 	amountIn := ConvertDecimalToBigInt(req.Amount, tokenIn.Decimals)
 	walletAddress := uatu.FormatEvmAddress(req.RecipientAddress)
-	token0 := uatu.FormatEvmAddress(tokenIn.Address)
-	token1 := uatu.FormatEvmAddress(tokenOut.Address)
 
-	res, err := q.getBestOutput(
-		ctx, amountIn, chain,
-		token0, token1, walletAddress,
-		pools,
-	)
+	res, err := dex.GetBestDexQuote(ctx, &dex.BestQuoteParams{
+		AmountIn:      amountIn,
+		Chain:         chain,
+		TokenIn:       tokenIn,
+		TokenOut:      tokenOut,
+		WalletAddress: walletAddress,
+		Pools:         pools,
+		RPCURL:        q.cfg.GetRPC(chain.Slug),
+		PriceCache:    q.priceCache,
+	})
 	if err != nil {
 		logger.Error("Failed to get best route", zap.Error(err))
 		return APIError{
@@ -128,25 +121,144 @@ func (q *quoteHandler) CreateQuote(
 		}, err
 	}
 
-	quote, err := newQuote(res, chain, tokenIn, tokenOut, walletAddress)
-	if err := q.quoteRepo.Create(ctx, quote); err != nil {
-		logger.Error("Failed to create quote", zap.Error(err))
+	quoteResponse, err := q.newQuote(ctx, res, chain, tokenIn, tokenOut, walletAddress)
+	if err != nil {
+		logger.Error("Failed to build quote", zap.Error(err))
 		return newAPIResponse(
-				http.StatusInternalServerError,
-				"an error occurred creating quote",
-				nil,
-			),
-			err
+			http.StatusInternalServerError,
+			err.Error(),
+			nil,
+		), err
 	}
-	return newAPIResponse(http.StatusOK, "Quote created successfully", quote), nil
+	return newAPIResponse(http.StatusOK, "Quote created successfully", quoteResponse), nil
 }
 
-func newQuote(
+// GetQuotes returns one non-persisted quote option for each supported DEX.
+//
+// @Summary List DEX quote options
+// @Description Prices a swap against every supported DEX and returns the valid routes ordered by output amount.
+// @Tags quotes
+// @Accept json
+// @Produce json
+// @Param message body uatu.QuoteRequest true "request body to compare DEX quotes"
+// @Success 200 {object} APIResponse{data=[]uatu.RouteQuote}
+// @Failure 400 {object} APIResponse
+// @Failure 500 {object} APIResponse
+// @Router /quotes/routes [post]
+func (q *quoteHandler) GetQuotes(
+	ctx context.Context,
+	span trace.Span,
+	logger *zap.Logger,
+	w http.ResponseWriter,
+	r *http.Request,
+) (render.Renderer, error) {
+	req := new(uatu.QuoteRequest)
+	if err := render.Bind(r, req); err != nil {
+		return nil, err
+	}
+	if err := metron.ValidateStruct(req); err != nil {
+		return APIError{
+			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
+		}, err
+	}
+
+	chain, err := q.chainRepo.GetBlockchain(ctx, uatu.QueryOptions{ChainID: req.ChainID})
+	if err != nil {
+		logger.Error("Failed to get chain", zap.Error(err))
+		return APIError{
+			newAPIResponse(http.StatusInternalServerError, "an error occurred fetching chain", nil),
+		}, err
+	}
+
+	tokenIn, tokenOut, err := getTokenInAndOut(chain.Tokens, req.TokenIn, req.TokenOut)
+	if err != nil {
+		return APIError{
+			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
+		}, err
+	}
+
+	pools, err := q.chainRepo.GetPools(ctx, uatu.QueryOptions{
+		TokenIn:  tokenIn.Address,
+		TokenOut: tokenOut.Address,
+		ChainID:  req.ChainID,
+	})
+	if err != nil {
+		logger.Error("Failed to get pools", zap.Error(err))
+		return APIError{
+			newAPIResponse(http.StatusInternalServerError, "an error occurred fetching pools", nil),
+		}, err
+	}
+
+	responses, err := dex.GetDexQuotes(ctx, &dex.BestQuoteParams{
+		AmountIn:      ConvertDecimalToBigInt(req.Amount, tokenIn.Decimals),
+		Chain:         chain,
+		TokenIn:       tokenIn,
+		TokenOut:      tokenOut,
+		WalletAddress: uatu.FormatEvmAddress(req.RecipientAddress),
+		Pools:         pools,
+		RPCURL:        q.cfg.GetRPC(chain.Slug),
+		PriceCache:    q.priceCache,
+	})
+	if err != nil {
+		logger.Error("Failed to get DEX quotes", zap.Error(err))
+		return APIError{
+			newAPIResponse(http.StatusInternalServerError, err.Error(), nil),
+		}, err
+	}
+
+	quotes := make([]uatu.RouteQuote, 0, len(responses))
+	deadline := Deadline()
+	for _, response := range responses {
+		quotes = append(quotes, uatu.RouteQuote{
+			AmountIn:  response.AmountIn.String(),
+			AmountOut: response.AmountOut.String(),
+			Deadline:  deadline,
+			TokenIn:   tokenIn,
+			TokenOut:  tokenOut,
+			Route:     response.Route,
+		})
+	}
+
+	return newAPIResponse(http.StatusOK, "DEX quotes fetched successfully", quotes), nil
+}
+
+func ConvertDecimalToBigInt(amount decimal.Decimal, decimals uint8) *big.Int {
+	return amount.Shift(int32(decimals)).BigInt()
+}
+
+func getToken(tokens []uatu.Token, tokenAddress common.Address) (uatu.Token, error) {
+	idx := slices.IndexFunc(tokens, func(t uatu.Token) bool {
+		return uatu.FormatEvmAddress(t.Address) == tokenAddress
+	})
+	if idx == -1 {
+		return uatu.Token{}, fmt.Errorf("token not found")
+	}
+	return tokens[idx], nil
+}
+
+func getTokenInAndOut(
+	tokens []uatu.Token,
+	token0, token1 string,
+) (uatu.Token, uatu.Token, error) {
+	tokenIn, err := getToken(tokens, uatu.FormatEvmAddress(token0))
+	if err != nil {
+		return uatu.Token{}, uatu.Token{}, fmt.Errorf("tokenIn was not found on the selected chain")
+	}
+	tokenOut, err := getToken(tokens, uatu.FormatEvmAddress(token1))
+	if err != nil {
+		return uatu.Token{}, uatu.Token{}, fmt.Errorf("tokenOut was not found on the selected chain")
+	}
+
+	return tokenIn, tokenOut, nil
+}
+
+func (q *quoteHandler) newQuote(
+	ctx context.Context,
 	res *uatu.IDexResponse,
 	chain uatu.Chain,
 	tokenIn, tokenOut uatu.Token,
 	walletAddress common.Address,
-) (*uatu.Quote, error) {
+) (*uatu.QuoteResponse, error) {
 	quoteID := newQuoteID()
 	deadline := Deadline()
 	amountIn := res.AmountIn.String()
@@ -176,11 +288,11 @@ func newQuote(
 
 	steps = append(steps, step(
 		fmt.Sprintf("Swap %s to %s", tokenIn.Symbol, tokenOut.Symbol),
-		res.RouterAddress,
+		res.RouterAddress.String(),
 		res.EncodedData,
 	))
 	quote := uatu.Quote{
-		QuoteId:            quoteID,
+		QuoteID:            quoteID,
 		AmountIn:           res.AmountIn.String(),
 		AmountOut:          res.AmountOut.String(),
 		AmountInFloat:      decimal.NewFromFloat(0),
@@ -207,160 +319,17 @@ func newQuote(
 			Symbol:   tokenOut.Symbol,
 			Name:     tokenOut.Name,
 		},
+		PairAddress: res.PairAddress.String(),
 		ExplorerUrl: chain.BlockExplorer,
 		Steps:       steps,
 		Status:      uatu.Pending,
+		Route:       res.Route,
 		Deadline:    deadline,
 		CreatedAt:   time.Now().UTC(),
 		UpdatedAt:   time.Now().UTC(),
 	}
-	return &quote, nil
-}
-
-type quoteResult struct {
-	response *uatu.IDexResponse
-	err      error
-}
-
-type quoteRoute struct {
-	pool *uatu.Pool
-	dex  uatu.Dex
-}
-
-func (q *quoteHandler) getBestOutput(
-	ctx context.Context,
-	amountIn *big.Int,
-	chain uatu.Chain,
-	tokenIn, tokenOut, walletAddress common.Address,
-	pools []uatu.Pool,
-) (*uatu.IDexResponse, error) {
-	client, err := dex.Provider(q.cfg.GetRPC(chain.Slug))
-	if err != nil {
-		return nil, fmt.Errorf("could not connect to %s rpc: %w", chain.Slug, err)
+	if err := q.quoteRepo.Create(ctx, &quote); err != nil {
+		return nil, fmt.Errorf("an error occurred creating quote")
 	}
-
-	dexBySlug := make(map[string]uatu.Dex, len(pools)+1)
-	routes := make([]quoteRoute, 0, len(pools)+1)
-	for i := range pools {
-		pool := pools[i]
-		if _, ok := dexBySlug[pool.DexName]; ok {
-			continue
-		}
-		d, err := q.chainRepo.GetDex(ctx, uatu.QueryOptions{
-			ChainID: chain.ChainID,
-			Slug:    pool.DexName,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("could not get dex %s on %s: %w", pool.DexName, chain.Slug, err)
-		}
-		dexBySlug[pool.DexName] = d
-		routes = append(routes, quoteRoute{pool: &pool, dex: d})
-	}
-
-	for _, d := range chain.Dex {
-		if d.Slug != dex.CowSlug {
-			continue
-		}
-		if _, exists := dexBySlug[d.Slug]; !exists {
-			dexBySlug[d.Slug] = d
-			routes = append(routes, quoteRoute{dex: d})
-		}
-		break
-	}
-
-	results := make(chan quoteResult, len(routes))
-	for _, route := range routes {
-		go func(route quoteRoute) {
-			var (
-				poolFee     uint
-				poolType    string
-				pairAddress common.Address
-			)
-			if route.pool != nil {
-				poolFee = route.pool.PoolFee
-				poolType = route.pool.PoolType
-				pairAddress = uatu.FormatEvmAddress(route.pool.PairAddress)
-			}
-			dexRequest := uatu.IDexRequest{
-				TokenIn:       tokenIn,
-				TokenOut:      tokenOut,
-				AmountIn:      amountIn,
-				PairAddress:   pairAddress,
-				PoolFee:       poolFee,
-				WalletAddress: walletAddress,
-				ChainId:       chain.ChainID,
-				Dex:           route.dex,
-				PoolType:      poolType,
-			}
-			var (
-				output *uatu.IDexResponse
-				err    error
-			)
-			switch route.dex.Slug {
-			case "uniswap", "pancakeswap", "oku":
-				output, err = client.Swap(ctx, dexRequest)
-			case "aerodrome":
-				output, err = client.SwapAerodrome(ctx, dexRequest)
-			case dex.CowSlug:
-				output, err = client.SwapCow(ctx, dexRequest)
-			default:
-				err = fmt.Errorf("unsupported dex %q", route.dex.Slug)
-			}
-			results <- quoteResult{response: output, err: err}
-		}(route)
-	}
-	var (
-		best    *uatu.IDexResponse
-		lastErr error
-	)
-
-	for range routes {
-		var r quoteResult
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		case r = <-results:
-		}
-
-		switch {
-		case r.err != nil:
-			lastErr = r.err
-			continue
-		case r.response == nil || r.response.AmountOut == nil:
-			continue
-		}
-
-		if best == nil || r.response.AmountOut.Cmp(best.AmountOut) > 0 {
-			best = r.response
-		}
-	}
-	if best == nil {
-		if lastErr != nil {
-			return nil, fmt.Errorf("no supported route found: %w", lastErr)
-		}
-		return nil, fmt.Errorf("no supported route found")
-	}
-	if best.AmountOut == nil {
-		return nil, fmt.Errorf("Best swap quote missing output amount")
-	}
-	if best.RegisterOrder != nil {
-		if err := best.RegisterOrder(ctx); err != nil {
-			return nil, fmt.Errorf("could not register selected DEX order: %w", err)
-		}
-	}
-	return best, nil
-}
-
-func ConvertDecimalToBigInt(amount decimal.Decimal, decimals uint8) *big.Int {
-	return amount.Shift(int32(decimals)).BigInt()
-}
-
-func getToken(tokens []uatu.Token, tokenAddress common.Address) (uatu.Token, error) {
-	idx := slices.IndexFunc(tokens, func(t uatu.Token) bool {
-		return uatu.FormatEvmAddress(t.Address) == tokenAddress
-	})
-	if idx == -1 {
-		return uatu.Token{}, fmt.Errorf("token not found")
-	}
-	return tokens[idx], nil
+	return &uatu.QuoteResponse{Quote: quote}, nil
 }
