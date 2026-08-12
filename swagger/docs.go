@@ -614,6 +614,10 @@ const docTemplate = `{
                 "dex": {
                     "type": "string"
                 },
+                "fees": {
+                    "description": "Fee in the input token's smallest unit.",
+                    "type": "string"
+                },
                 "logo": {
                     "type": "string"
                 },
@@ -630,6 +634,10 @@ const docTemplate = `{
                 },
                 "amountOut": {
                     "type": "string"
+                },
+                "deadline": {
+                    "description": "Unix timestamp when this route quote expires.",
+                    "type": "integer"
                 },
                 "route": {
                     "$ref": "#/definitions/uatu.Route"
