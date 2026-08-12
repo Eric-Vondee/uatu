@@ -18,6 +18,7 @@ import (
 
 const (
 	basisPointsDenominator = 10000
+	poolFeeDenominator     = 1_000_000
 	minOracleOutputBps     = 9800
 	maxOracleOutputBps     = 10200
 	maxOraclePriceAge      = 90 * time.Second
@@ -49,6 +50,25 @@ type oraclePrice struct {
 	decimals  uint8
 	updatedAt time.Time
 	fetchedAt time.Time
+}
+
+func routeWithPoolFee(route uatu.Route, amountIn *big.Int, poolFee uint) uatu.Route {
+	return routeWithFee(
+		route,
+		poolFeeAmount(amountIn, new(big.Int).SetUint64(uint64(poolFee))),
+	)
+}
+
+func routeWithFee(route uatu.Route, fee *big.Int) uatu.Route {
+	route.Fees = new(big.Int).Set(fee).String()
+	return route
+}
+
+func poolFeeAmount(amountIn, poolFee *big.Int) *big.Int {
+	return new(big.Int).Div(
+		new(big.Int).Mul(amountIn, poolFee),
+		big.NewInt(poolFeeDenominator),
+	)
 }
 
 type BestQuoteParams struct {

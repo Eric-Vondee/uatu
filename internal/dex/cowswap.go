@@ -443,7 +443,7 @@ func (c *Client) CowSwap(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRes
 	if err != nil {
 		return nil, err
 	}
-	if quote.Expiration.IsZero() == false && !time.Now().Before(quote.Expiration) {
+	if !quote.Expiration.IsZero() && !time.Now().Before(quote.Expiration) {
 		return nil, fmt.Errorf("cow quote expired at %s", quote.Expiration.UTC().Format(time.RFC3339Nano))
 	}
 	if quote.Expiration.IsZero() {
@@ -527,6 +527,6 @@ func (c *Client) CowSwap(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRes
 		RegisterOrder: func(ctx context.Context) error {
 			return cow.PlaceOrder(ctx, network, order, d.WalletAddress, quoteID, uid)
 		},
-		Route: DexRoutes["cowswap"],
+		Route: routeWithFee(DexRoutes["cowswap"], feeAmount),
 	}, nil
 }

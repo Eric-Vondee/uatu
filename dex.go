@@ -43,6 +43,8 @@ type Route struct {
 	Name string `json:"name"`
 	Logo string `json:"logo"`
 	Dex  string `json:"dex"`
+	// Fees is the route fee in the input token's smallest unit.
+	Fees string `json:"fees"`
 }
 
 type IDexResponse struct {

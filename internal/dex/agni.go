@@ -141,6 +141,6 @@ func (c *Client) Agni(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespon
 		Dex:                  d.Dex,
 		RouterAddress:        routerAddress,
 		PairAddress:          d.PairAddress,
-		Route:                DexRoutes["agni"],
+		Route:                routeWithFee(DexRoutes["agni"], poolFeeAmount(d.AmountIn, pool.Fee)),
 	}, nil
 }

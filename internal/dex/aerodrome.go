@@ -211,6 +211,6 @@ func (c *Client) Aerodrome(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexR
 		Dex:                  d.Dex,
 		RouterAddress:        routerAddress,
 		PairAddress:          d.PairAddress,
-		Route:                DexRoutes["aerodrome"],
+		Route:                routeWithFee(DexRoutes["aerodrome"], poolFeeAmount(d.AmountIn, pool.Fee)),
 	}, nil
 }

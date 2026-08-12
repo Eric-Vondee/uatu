@@ -130,7 +130,7 @@ func (c *Client) quickSwapV2(ctx context.Context, d uatu.IDexRequest) (*uatu.IDe
 		Dex:                  d.Dex,
 		RouterAddress:        routerAddress,
 		PairAddress:          d.PairAddress,
-		Route:                DexRoutes["quickswap"],
+		Route:                routeWithPoolFee(DexRoutes["quickswap"], d.AmountIn, d.PoolFee),
 	}, nil
 }
 
@@ -185,7 +185,7 @@ func (c *Client) quickSwapV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDe
 		Dex:                  d.Dex,
 		RouterAddress:        routerAddress,
 		PairAddress:          d.PairAddress,
-		Route:                DexRoutes["quickswap"],
+		Route:                routeWithFee(DexRoutes["quickswap"], poolFeeAmount(d.AmountIn, pool.Fee)),
 	}, nil
 }
 
