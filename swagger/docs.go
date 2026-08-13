@@ -56,6 +56,66 @@ const docTemplate = `{
                 }
             }
         },
+        "/blockchains/dex": {
+            "get": {
+                "description": "Returns the DEX seeded under the given slug on the given chain, including\nthe router, factory, quoter and settlement addresses used to price and\nencode a swap. Both chainId and slug are required, as a slug identifies a\nDEX only within one chain.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "catalogue"
+                ],
+                "summary": "Get a DEX on a chain",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "EVM chain ID",
+                        "name": "chainId",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "DEX slug, e.g. uniswap",
+                        "name": "slug",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/server.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/uatu.Dex"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/server.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/server.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/blockchains/pools": {
             "get": {
                 "description": "Returns the liquidity pools discovered by the seeder for the given chain,\noptionally filtered to a single DEX. Unlike the token endpoint, chainId\nis required here.",
@@ -615,7 +675,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "fees": {
-                    "description": "Fee in the input token's smallest unit.",
+                    "description": "Fees is the route fee in the input token's smallest unit.",
                     "type": "string"
                 },
                 "logo": {
@@ -636,7 +696,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deadline": {
-                    "description": "Unix timestamp when this route quote expires.",
                     "type": "integer"
                 },
                 "route": {
