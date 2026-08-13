@@ -86,8 +86,8 @@ func (c *chainRepo) GetPools(ctx context.Context, opts uatu.QueryOptions) ([]uat
 
 	if opts.TokenIn != "" && opts.TokenOut != "" {
 		q = q.Where(
-			"(base_token_address = ? AND quote_token_address = ?)"+
-				" OR (base_token_address = ? AND quote_token_address = ?)",
+			"(LOWER(base_token_address) = LOWER(?) AND LOWER(quote_token_address) = LOWER(?))"+
+				" OR (LOWER(base_token_address) = LOWER(?) AND LOWER(quote_token_address) = LOWER(?))",
 			opts.TokenIn, opts.TokenOut, opts.TokenOut, opts.TokenIn,
 		)
 	}
