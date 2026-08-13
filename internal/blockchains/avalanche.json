@@ -66,7 +66,7 @@
       "symbol": "BTC.b",
       "address": "0x152b9d0FdC40C096757F570A51E494bd4b943E50",
       "decimals": 8,
-      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/btcb.svg",
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/wbtc.svg",
       "slug": "wbtc",
       "isStableCoin": false
     }
