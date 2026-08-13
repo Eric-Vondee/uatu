@@ -85,4 +85,5 @@ func (s *Server) chainRoutes(r chi.Router) {
 	r.Get("/", WrapHTTPHandler(s.logger, chain.GetBlockchains, s.cfg, "GetBlockchains"))
 	r.Get("/tokens", WrapHTTPHandler(s.logger, chain.GetTokens, s.cfg, "GetTokens"))
 	r.Get("/pools", WrapHTTPHandler(s.logger, chain.GetPools, s.cfg, "GetPools"))
+	r.Get("/dex", WrapHTTPHandler(s.logger, chain.GetDex, s.cfg, "GetDex"))
 }

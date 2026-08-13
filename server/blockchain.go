@@ -121,3 +121,46 @@ func (c *chainHandler) GetPools(
 	}
 	return newAPIResponse(http.StatusOK, "Pools fetched successfully", pools), nil
 }
+
+// GetDex returns one DEX's contract addresses on a chain.
+//
+// @Summary Get a DEX on a chain
+// @Description Returns the DEX seeded under the given slug on the given chain, including
+// @Description the router, factory, quoter and settlement addresses used to price and
+// @Description encode a swap. Both chainId and slug are required, as a slug identifies a
+// @Description DEX only within one chain.
+// @Tags catalogue
+// @Produce json
+// @Param chainId query int true "EVM chain ID"
+// @Param slug query string true "DEX slug, e.g. uniswap"
+// @Success 200 {object} APIResponse{data=uatu.Dex}
+// @Failure 400 {object} APIResponse
+// @Failure 500 {object} APIResponse
+// @Router /blockchains/dex [get]
+func (c *chainHandler) GetDex(
+	ctx context.Context,
+	span trace.Span,
+	logger *zap.Logger,
+	w http.ResponseWriter,
+	r *http.Request,
+) (render.Renderer, error) {
+	chainID, err := strconv.ParseUint(r.URL.Query().Get("chainId"), 10, 64)
+	if err != nil {
+		return APIError{
+			newAPIResponse(http.StatusBadRequest, "invalid chain id", nil),
+		}, err
+	}
+	dex, err := c.chainRepo.GetDex(ctx, uatu.QueryOptions{
+		ChainID: uint(chainID),
+	})
+	if err != nil {
+		logger.Error("Failed to get dex",
+			zap.Error(err),
+			zap.Uint64("chainID", chainID),
+		)
+		return APIError{
+			newAPIResponse(http.StatusInternalServerError, "an error occurred fetching dex", nil),
+		}, err
+	}
+	return newAPIResponse(http.StatusOK, "Dex fetched successfully", dex), nil
+}

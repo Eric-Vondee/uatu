@@ -64,7 +64,7 @@ type ChainRepository interface {
 	GetTokens(ctx context.Context, opts QueryOptions) ([]Token, error)
 	GetPools(ctx context.Context, opts QueryOptions) ([]Pool, error)
 	UpdatePoolLiquidity(ctx context.Context, pool *Pool) error
-	GetDex(ctx context.Context, opts QueryOptions) (Dex, error)
+	GetDex(ctx context.Context, opts QueryOptions) ([]Dex, error)
 }
 
 // blockchainsDir is the embedded directory holding one JSON file per chain.
