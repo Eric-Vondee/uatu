@@ -30,8 +30,8 @@ type Pool struct {
 	QuoteTokenBalance string           `bun:"quote_token_balance,type:numeric,nullzero" json:"quoteTokenBalance,omitempty"`
 	BaseToken         Token            `bun:"base_token,type:jsonb,notnull" json:"baseToken"`
 	QuoteToken        Token            `bun:"quote_token,type:jsonb,notnull" json:"quoteToken"`
-	Liquidity         PoolLiquidity    `bun:"liquidity,type:jsonb" json:"liquidity,omitempty"`
-	LiquidityInUSD    PoolLiquidityUSD `bun:"liquidity_in_usd,type:jsonb" json:"liquidityInUsd,omitempty"`
+	Liquidity         PoolLiquidity    `bun:"liquidity,type:jsonb" json:"liquidity"`
+	LiquidityInUSD    PoolLiquidityUSD `bun:"liquidity_in_usd,type:jsonb" json:"liquidityInUsd"`
 	ChainID           uint             `bun:"chain_id,notnull" json:"-"`
 	PoolFee           uint             `bun:"pool_fee,nullzero" json:"poolFee,omitempty"`
 	PoolType          string           `bun:"pool_type,notnull" json:"poolType,omitempty"`
