@@ -198,7 +198,8 @@ func newPool(
 
 func hasSwapDex(c uatu.Chain) bool {
 	for _, d := range c.Dex {
-		if d.Slug == "agni" || d.Slug == "uniswap" || d.Slug == "pancakeswap" {
+		switch d.Slug {
+		case "agni", "uniswap", "pancakeswap", "oku":
 			return true
 		}
 	}

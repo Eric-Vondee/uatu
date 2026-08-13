@@ -55,15 +55,19 @@ func (c *chainRepo) GetTokens(ctx context.Context, opts uatu.QueryOptions) ([]ua
 	return tokens, nil
 }
 
-func (c *chainRepo) GetDex(ctx context.Context, opts uatu.QueryOptions) (uatu.Dex, error) {
-	var dex uatu.Dex
-	err := c.db.NewSelect().
-		Model(&dex).
-		Where("blockchain_id = ?", opts.ChainID).
-		Where("slug = ?", opts.Slug).
-		Scan(ctx)
-	if err != nil {
-		return uatu.Dex{}, fmt.Errorf("could not get dex: %w", err)
+func (c *chainRepo) GetDex(ctx context.Context, opts uatu.QueryOptions) ([]uatu.Dex, error) {
+	var dex []uatu.Dex
+
+	q := c.db.NewSelect().Model(&dex)
+
+	if opts.ChainID != 0 {
+		q = q.Where("blockchain_id = ?", opts.ChainID)
+	}
+	if opts.Slug != "" {
+		q = q.Where("slug = ?", opts.Slug)
+	}
+	if err := q.Scan(ctx); err != nil {
+		return nil, fmt.Errorf("could not get dex: %w", err)
 	}
 	return dex, nil
 }
