@@ -1,11 +1,13 @@
 package server
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/sethvargo/go-limiter"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"github.com/uatu"
 	"github.com/uatu/config"
@@ -20,6 +22,8 @@ type Server struct {
 	quotes     uatu.QuoteRepository
 	chains     uatu.ChainRepository
 	priceCache *redisstore.RedisService
+	rateLimit  func(http.Handler) http.Handler
+	rateStore  limiter.Store
 }
 
 func New(
@@ -28,28 +32,55 @@ func New(
 	quotes uatu.QuoteRepository,
 	chains uatu.ChainRepository,
 	priceCache *redisstore.RedisService,
-) *Server {
+) (*Server, error) {
+	tokens, interval, err := rateLimitOptions(cfg.RateLimit)
+	if err != nil {
+		return nil, err
+	}
+	rateStore, err := redisstore.NewRateLimitStore(cfg.Redis, tokens, interval)
+	if err != nil {
+		return nil, err
+	}
+	rateLimit, err := newRateLimiter(cfg.RateLimit, rateStore)
+	if err != nil {
+		_ = rateStore.Close(context.Background())
+		return nil, err
+	}
+
 	return &Server{
 		cfg:        cfg,
 		logger:     logger,
 		quotes:     quotes,
 		chains:     chains,
 		priceCache: priceCache,
-	}
+		rateLimit:  rateLimit,
+		rateStore:  rateStore,
+	}, nil
 }
 
 func (s *Server) Run() error {
+	defer func() {
+		if err := s.rateStore.Close(context.Background()); err != nil {
+			s.logger.Warn("Failed to close rate limiter store", zap.Error(err))
+		}
+	}()
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Logger)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   s.cfg.AllowedOrigins,
-		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
-		AllowedHeaders:   []string{"Authorization", "Content-Type"},
-		ExposedHeaders:   []string{"X-Request-ID", "X-Trace-ID"},
+		AllowedOrigins: s.cfg.AllowedOrigins,
+		AllowedMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
+		AllowedHeaders: []string{"Authorization", "Content-Type"},
+		ExposedHeaders: []string{
+			"X-Request-ID", "X-Trace-ID",
+			"X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "Retry-After",
+		},
 		AllowCredentials: false,
 		MaxAge:           86400,
 	}))
+
+	r.Use(s.rateLimit)
 
 	r.Route("/quotes", s.quoteRoutes)
 	r.Route("/blockchains", s.chainRoutes)
