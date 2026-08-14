@@ -22,6 +22,7 @@ const (
 type Actions struct {
 	Message string `json:"message"`
 	Amount  string `json:"amount"`
+	Value   string `json:"value,omitempty"`
 	Data    string `json:"data,omitempty"`
 	Spender string `json:"spender,omitempty"`
 	From    string `json:"from"`

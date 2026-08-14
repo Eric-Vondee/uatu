@@ -88,10 +88,22 @@ func (q *quoteHandler) CreateQuote(
 			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
 		}, err
 	}
+	executionTokenIn, wrapNativeInput, err := dex.WrappedNativeToken(chain, tokenIn)
+	if err != nil {
+		return APIError{
+			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
+		}, err
+	}
+	executionTokenOut, unwrapNativeOutput, err := dex.WrappedNativeToken(chain, tokenOut)
+	if err != nil {
+		return APIError{
+			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
+		}, err
+	}
 
 	pools, err := q.chainRepo.GetPools(ctx, uatu.QueryOptions{
-		TokenIn:  tokenIn.Address,
-		TokenOut: tokenOut.Address,
+		TokenIn:  executionTokenIn.Address,
+		TokenOut: executionTokenOut.Address,
 		ChainID:  req.ChainID,
 	})
 	if err != nil {
@@ -105,14 +117,18 @@ func (q *quoteHandler) CreateQuote(
 	walletAddress := uatu.FormatEvmAddress(req.RecipientAddress)
 
 	res, err := dex.GetBestDexQuote(ctx, &dex.BestQuoteParams{
-		AmountIn:      amountIn,
-		Chain:         chain,
-		TokenIn:       tokenIn,
-		TokenOut:      tokenOut,
-		WalletAddress: walletAddress,
-		Pools:         pools,
-		RPCURL:        q.cfg.GetRPC(chain.Slug),
-		PriceCache:    q.priceCache,
+		AmountIn:           amountIn,
+		Chain:              chain,
+		TokenIn:            tokenIn,
+		TokenOut:           tokenOut,
+		ExecutionTokenIn:   executionTokenIn,
+		ExecutionTokenOut:  executionTokenOut,
+		WrapNativeInput:    wrapNativeInput,
+		UnwrapNativeOutput: unwrapNativeOutput,
+		WalletAddress:      walletAddress,
+		Pools:              pools,
+		RPCURL:             q.cfg.GetRPC(chain.Slug),
+		PriceCache:         q.priceCache,
 	})
 	if err != nil {
 		logger.Error("Failed to get best route", zap.Error(err))
@@ -176,10 +192,22 @@ func (q *quoteHandler) GetQuotes(
 			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
 		}, err
 	}
+	executionTokenIn, wrapNativeInput, err := dex.WrappedNativeToken(chain, tokenIn)
+	if err != nil {
+		return APIError{
+			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
+		}, err
+	}
+	executionTokenOut, unwrapNativeOutput, err := dex.WrappedNativeToken(chain, tokenOut)
+	if err != nil {
+		return APIError{
+			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
+		}, err
+	}
 
 	pools, err := q.chainRepo.GetPools(ctx, uatu.QueryOptions{
-		TokenIn:  tokenIn.Address,
-		TokenOut: tokenOut.Address,
+		TokenIn:  executionTokenIn.Address,
+		TokenOut: executionTokenOut.Address,
 		ChainID:  req.ChainID,
 	})
 	if err != nil {
@@ -190,14 +218,18 @@ func (q *quoteHandler) GetQuotes(
 	}
 
 	responses, err := dex.GetDexQuotes(ctx, &dex.BestQuoteParams{
-		AmountIn:      ConvertDecimalToBigInt(req.Amount, tokenIn.Decimals),
-		Chain:         chain,
-		TokenIn:       tokenIn,
-		TokenOut:      tokenOut,
-		WalletAddress: uatu.FormatEvmAddress(req.RecipientAddress),
-		Pools:         pools,
-		RPCURL:        q.cfg.GetRPC(chain.Slug),
-		PriceCache:    q.priceCache,
+		AmountIn:           ConvertDecimalToBigInt(req.Amount, tokenIn.Decimals),
+		Chain:              chain,
+		TokenIn:            tokenIn,
+		TokenOut:           tokenOut,
+		ExecutionTokenIn:   executionTokenIn,
+		ExecutionTokenOut:  executionTokenOut,
+		WrapNativeInput:    wrapNativeInput,
+		UnwrapNativeOutput: unwrapNativeOutput,
+		WalletAddress:      uatu.FormatEvmAddress(req.RecipientAddress),
+		Pools:              pools,
+		RPCURL:             q.cfg.GetRPC(chain.Slug),
+		PriceCache:         q.priceCache,
 	})
 	if err != nil {
 		logger.Error("Failed to get DEX quotes", zap.Error(err))
@@ -264,10 +296,15 @@ func (q *quoteHandler) newQuote(
 	amountIn := res.AmountIn.String()
 	wallet := walletAddress.String()
 
-	step := func(msg, to string, data []byte) uatu.Actions {
+	step := func(msg, to string, data []byte, value *big.Int) uatu.Actions {
+		valueString := ""
+		if value != nil {
+			valueString = value.String()
+		}
 		return uatu.Actions{
 			Message: msg,
 			Amount:  amountIn,
+			Value:   valueString,
 			From:    wallet,
 			To:      to,
 			Data:    uatu.HexBytes(data),
@@ -278,18 +315,19 @@ func (q *quoteHandler) newQuote(
 	steps := make([]uatu.Actions, 0, 3)
 	if len(res.EncodedERC20Approval) != 0 {
 		msg := fmt.Sprintf("%s token approval", tokenIn.Symbol)
-		steps = append(steps, step(msg, tokenIn.Address, res.EncodedERC20Approval))
+		steps = append(steps, step(msg, tokenIn.Address, res.EncodedERC20Approval, nil))
 	}
 
 	if len(res.EncodedPermit2Approval) != 0 {
 		msg := "Permit2 approval"
-		steps = append(steps, step(msg, res.Dex.Permit2Address, res.EncodedPermit2Approval))
+		steps = append(steps, step(msg, res.Dex.Permit2Address, res.EncodedPermit2Approval, nil))
 	}
 
 	steps = append(steps, step(
 		fmt.Sprintf("Swap %s to %s", tokenIn.Symbol, tokenOut.Symbol),
 		res.RouterAddress.String(),
 		res.EncodedData,
+		res.NativeValue,
 	))
 	quote := uatu.Quote{
 		QuoteID:            quoteID,

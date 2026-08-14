@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -72,14 +73,33 @@ func poolFeeAmount(amountIn, poolFee *big.Int) *big.Int {
 }
 
 type BestQuoteParams struct {
-	AmountIn      *big.Int
-	Chain         uatu.Chain
-	TokenIn       uatu.Token
-	TokenOut      uatu.Token
-	WalletAddress common.Address
-	Pools         []uatu.Pool
-	RPCURL        string
-	PriceCache    *redisstore.RedisService
+	AmountIn           *big.Int
+	Chain              uatu.Chain
+	TokenIn            uatu.Token
+	TokenOut           uatu.Token
+	ExecutionTokenIn   uatu.Token
+	ExecutionTokenOut  uatu.Token
+	WrapNativeInput    bool
+	UnwrapNativeOutput bool
+	WalletAddress      common.Address
+	Pools              []uatu.Pool
+	RPCURL             string
+	PriceCache         *redisstore.RedisService
+}
+
+func WrappedNativeToken(chain uatu.Chain, token uatu.Token) (uatu.Token, bool, error) {
+	if uatu.FormatEvmAddress(token.Address) != (common.Address{}) {
+		return token, false, nil
+	}
+
+	wrappedSymbol := "W" + token.Symbol
+	for _, candidate := range chain.Tokens {
+		if strings.EqualFold(candidate.Symbol, wrappedSymbol) {
+			return candidate, true, nil
+		}
+	}
+
+	return uatu.Token{}, false, fmt.Errorf("%s is not configured for %s", wrappedSymbol, chain.Name)
 }
 
 func cachedOraclePrice(
@@ -144,18 +164,6 @@ func GetDexQuotes(
 		return nil, fmt.Errorf("could not connect to %s rpc: %w", chain.Slug, err)
 	}
 
-	priceIn, err := cachedOraclePrice(ctx, tokenIn, priceCache)
-	if err != nil {
-		return nil, fmt.Errorf("could not load oracle price for %s: %w", tokenIn.Symbol, err)
-	}
-	priceOut, err := cachedOraclePrice(ctx, tokenOut, priceCache)
-	if err != nil {
-		return nil, fmt.Errorf("could not load oracle price for %s: %w", tokenOut.Symbol, err)
-	}
-
-	tokenInAddress := uatu.FormatEvmAddress(tokenIn.Address)
-	tokenOutAddress := uatu.FormatEvmAddress(tokenOut.Address)
-
 	dexBySlug := make(map[string]uatu.Dex, len(pools)+1)
 	routes := make([]quoteRoute, 0, len(pools)+1)
 	for i := range pools {
@@ -175,12 +183,23 @@ func GetDexQuotes(
 		if d.Slug != CowSlug {
 			continue
 		}
-		if _, exists := dexBySlug[d.Slug]; !exists {
-			dexBySlug[d.Slug] = d
+		if !params.WrapNativeInput && !params.UnwrapNativeOutput {
 			routes = append(routes, quoteRoute{dex: d})
 		}
 		break
 	}
+
+	priceIn, err := cachedOraclePrice(ctx, tokenIn, priceCache)
+	if err != nil {
+		return nil, fmt.Errorf("could not load oracle price for %s: %w", tokenIn.Symbol, err)
+	}
+	priceOut, err := cachedOraclePrice(ctx, tokenOut, priceCache)
+	if err != nil {
+		return nil, fmt.Errorf("could not load oracle price for %s: %w", tokenOut.Symbol, err)
+	}
+
+	tokenInAddress := uatu.FormatEvmAddress(params.ExecutionTokenIn.Address)
+	tokenOutAddress := uatu.FormatEvmAddress(params.ExecutionTokenOut.Address)
 
 	results := make(chan quoteResult, len(routes))
 	for _, route := range routes {
@@ -196,15 +215,17 @@ func GetDexQuotes(
 				pairAddress = uatu.FormatEvmAddress(route.pool.PairAddress)
 			}
 			dexRequest := uatu.IDexRequest{
-				TokenIn:       tokenInAddress,
-				TokenOut:      tokenOutAddress,
-				AmountIn:      amountIn,
-				PairAddress:   pairAddress,
-				PoolFee:       poolFee,
-				WalletAddress: walletAddress,
-				ChainId:       chain.ChainID,
-				Dex:           route.dex,
-				PoolType:      poolType,
+				TokenIn:            tokenInAddress,
+				TokenOut:           tokenOutAddress,
+				AmountIn:           amountIn,
+				PairAddress:        pairAddress,
+				PoolFee:            poolFee,
+				WalletAddress:      walletAddress,
+				ChainId:            chain.ChainID,
+				Dex:                route.dex,
+				WrapNativeInput:    params.WrapNativeInput,
+				UnwrapNativeOutput: params.UnwrapNativeOutput,
+				PoolType:           poolType,
 			}
 			var (
 				output *uatu.IDexResponse
