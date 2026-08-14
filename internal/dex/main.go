@@ -43,6 +43,7 @@ type quoteRoute struct {
 
 type quoteResult struct {
 	response *uatu.IDexResponse
+	dex      string
 	err      error
 }
 
@@ -164,18 +165,13 @@ func GetDexQuotes(
 		return nil, fmt.Errorf("could not connect to %s rpc: %w", chain.Slug, err)
 	}
 
-	dexBySlug := make(map[string]uatu.Dex, len(pools)+1)
 	routes := make([]quoteRoute, 0, len(pools)+1)
 	for i := range pools {
 		pool := pools[i]
-		if _, ok := dexBySlug[pool.DexName]; ok {
-			continue
-		}
 		d, ok := dexForSlug(chain.Dex, pool.DexName)
 		if !ok {
 			return nil, fmt.Errorf("could not find dex %s on %s", pool.DexName, chain.Slug)
 		}
-		dexBySlug[pool.DexName] = d
 		routes = append(routes, quoteRoute{pool: &pool, dex: d})
 	}
 
@@ -187,6 +183,9 @@ func GetDexQuotes(
 			routes = append(routes, quoteRoute{dex: d})
 		}
 		break
+	}
+	if len(routes) == 0 {
+		return nil, fmt.Errorf("no eligible %s/%s pools found on %s", params.ExecutionTokenIn.Symbol, params.ExecutionTokenOut.Symbol, chain.Name)
 	}
 
 	priceIn, err := cachedOraclePrice(ctx, tokenIn, priceCache)
@@ -245,13 +244,13 @@ func GetDexQuotes(
 			default:
 				err = fmt.Errorf("unsupported dex %q", route.dex.Slug)
 			}
-			results <- quoteResult{response: output, err: err}
+			results <- quoteResult{response: output, dex: route.dex.Name, err: err}
 		}(route)
 	}
 
 	var (
-		quotes  = make([]*uatu.IDexResponse, 0, len(routes))
-		lastErr error
+		quotesByDex = make(map[string]*uatu.IDexResponse, len(routes))
+		errs        = make([]error, 0, len(routes))
 	)
 
 	for range routes {
@@ -264,21 +263,29 @@ func GetDexQuotes(
 
 		switch {
 		case r.err != nil:
-			lastErr = r.err
+			errs = append(errs, fmt.Errorf("%s: %w", r.dex, r.err))
 			continue
 		case r.response == nil || r.response.AmountOut == nil:
+			errs = append(errs, fmt.Errorf("%s: did not return a quote", r.dex))
 			continue
 		}
 		if err := guardSwapOutput(amountIn, r.response.AmountOut, tokenIn, tokenOut, priceIn, priceOut); err != nil {
-			lastErr = err
+			errs = append(errs, fmt.Errorf("%s: %w", r.dex, err))
 			continue
 		}
 
-		quotes = append(quotes, r.response)
+		best, exists := quotesByDex[r.response.Dex.Slug]
+		if !exists || r.response.AmountOut.Cmp(best.AmountOut) > 0 {
+			quotesByDex[r.response.Dex.Slug] = r.response
+		}
+	}
+	quotes := make([]*uatu.IDexResponse, 0, len(quotesByDex))
+	for _, quote := range quotesByDex {
+		quotes = append(quotes, quote)
 	}
 	if len(quotes) == 0 {
-		if lastErr != nil {
-			return nil, fmt.Errorf("no acceptable route found: %w", lastErr)
+		if len(errs) > 0 {
+			return nil, fmt.Errorf("no acceptable route found: %w", errors.Join(errs...))
 		}
 		return nil, fmt.Errorf("no acceptable route found")
 	}
