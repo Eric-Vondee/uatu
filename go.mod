@@ -11,8 +11,11 @@ require (
 	github.com/go-chi/render v1.0.3
 	github.com/go-co-op/gocron/v2 v2.22.0
 	github.com/golang-migrate/migrate/v4 v4.19.1
+	github.com/gomodule/redigo v1.8.2
 	github.com/google/uuid v1.6.0
 	github.com/redis/go-redis/v9 v9.19.0
+	github.com/sethvargo/go-limiter v1.2.0
+	github.com/sethvargo/go-redisstore v0.3.0
 	github.com/shopspring/decimal v1.4.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
