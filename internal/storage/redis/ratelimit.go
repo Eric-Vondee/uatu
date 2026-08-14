@@ -1,6 +1,7 @@
 package redisstore
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 
 func NewRateLimitStore(cfg config.RedisConfig, tokens uint64, interval time.Duration) (limiter.Store, error) {
 	if cfg.DSN == "" {
-		return nil, fmt.Errorf("Redis DSN is required for the rate limiter")
+		return nil, errors.New("redis DSN is required for the rate limiter")
 	}
 
 	store, err := limiterredis.New(&limiterredis.Config{
