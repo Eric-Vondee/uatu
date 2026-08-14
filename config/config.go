@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/Eric-Vondee/metron"
 	"github.com/spf13/viper"
@@ -16,10 +17,24 @@ type PostgresConfig struct {
 type RedisConfig struct {
 	DSN string `mapstructure:"REDIS_DSN"`
 }
+
+type RateLimitConfig struct {
+	Tokens   uint64        `mapstructure:"RATE_LIMIT_TOKENS"`
+	Interval time.Duration `mapstructure:"RATE_LIMIT_INTERVAL"`
+	// TrustedHeader is a client-IP header set by the reverse proxy, such as
+	// X-Forwarded-For or CF-Connecting-IP. It is ignored unless the TCP peer
+	// matches TrustedProxyCIDRs.
+	TrustedHeader string `mapstructure:"RATE_LIMIT_TRUSTED_HEADER"`
+	// TrustedProxyCIDRs is a comma-separated allowlist of reverse-proxy CIDRs.
+	// It must be configured whenever TrustedHeader is set so a client that can
+	// reach the server directly cannot forge its own rate-limit key.
+	TrustedProxyCIDRs string `mapstructure:"RATE_LIMIT_TRUSTED_PROXY_CIDRS"`
+}
 type Config struct {
-	AllowedOrigins []string    `mapstructure:"ALLOWED_ORIGINS" validate:"required"`
-	PORT           string      `mapstructure:"PORT" validate:"required"`
-	Redis          RedisConfig `mapstructure:",squash" validate:"required"`
+	AllowedOrigins []string        `mapstructure:"ALLOWED_ORIGINS" validate:"required"`
+	PORT           string          `mapstructure:"PORT" validate:"required"`
+	Redis          RedisConfig     `mapstructure:",squash" validate:"required"`
+	RateLimit      RateLimitConfig `mapstructure:",squash"`
 	Otel           struct {
 		IsEnabled bool   `mapstructure:"OTEL_ENABLED"`
 		Endpoint  string `mapstructure:"OTEL_ENDPOINT" validate:"required"`
@@ -66,6 +81,9 @@ func InitializeConfig() (*Config, error) {
 		}
 		break
 	}
+
+	viper.SetDefault("RATE_LIMIT_TOKENS", 60)
+	viper.SetDefault("RATE_LIMIT_INTERVAL", time.Minute)
 
 	viper.AutomaticEnv()
 	bindEnvs(reflect.TypeOf(cfg))
