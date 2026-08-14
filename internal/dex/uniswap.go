@@ -17,9 +17,15 @@ import (
 type Command string
 
 const (
-	V2_SWAP Command = "0x08"
-	V3_SWAP Command = "0x00"
+	V2_SWAP     Command = "0x08"
+	V3_SWAP     Command = "0x00"
+	WRAP_ETH    Command = "0x0b"
+	UNWRAP_WETH Command = "0x0c"
 )
+
+// universalRouterRecipient keeps a swap's WETH output in the router so the
+// following UNWRAP_WETH command can withdraw it to the user.
+var universalRouterRecipient = common.HexToAddress("0x0000000000000000000000000000000000000002")
 
 type V2Pool struct {
 	Token0   common.Address
@@ -254,6 +260,27 @@ var v3SwapExactInArgs = abi.Arguments{
 	{Type: mustABIType("bool")},
 }
 
+var unwrapWETHArgs = abi.Arguments{
+	{Type: mustABIType("address")},
+	{Type: mustABIType("uint256")},
+}
+
+func encodeUnwrapWETH(recipient common.Address, amountMinimum *big.Int) ([]byte, error) {
+	input, err := unwrapWETHArgs.Pack(recipient, amountMinimum)
+	if err != nil {
+		return nil, fmt.Errorf("could not encode WETH unwrap input: %w", err)
+	}
+	return input, nil
+}
+
+func encodeWrapETH(recipient common.Address, amount *big.Int) ([]byte, error) {
+	input, err := unwrapWETHArgs.Pack(recipient, amount)
+	if err != nil {
+		return nil, fmt.Errorf("could not encode native token wrap input: %w", err)
+	}
+	return input, nil
+}
+
 func encodeV3InputParams(
 	recipient common.Address,
 	amountIn, amountOutMin *big.Int,
@@ -300,10 +327,23 @@ func encodeV3InputParams(
 // 	return calldata, nil
 // }
 
-func encodeUniversalRouterExecute(cmd Command, input []byte, deadline *big.Int) ([]byte, error) {
+func encodeUniversalRouterExecute(commands []Command, inputs [][]byte, deadline *big.Int) ([]byte, error) {
+	if len(commands) == 0 || len(commands) != len(inputs) {
+		return nil, fmt.Errorf("commands and inputs must be non-empty and have equal length")
+	}
+
+	commandBytes := make([]byte, len(commands))
+	for i, command := range commands {
+		encoded := common.FromHex(string(command))
+		if len(encoded) != 1 {
+			return nil, fmt.Errorf("invalid universal router command %q", command)
+		}
+		commandBytes[i] = encoded[0]
+	}
+
 	calldata, err := universalRouterABI.Pack("execute",
-		common.FromHex(string(cmd)),
-		[][]byte{input},
+		commandBytes,
+		inputs,
 		deadline,
 	)
 	if err != nil {
@@ -316,44 +356,31 @@ func (c *Client) swapV2UniversalRouter(ctx context.Context, d uatu.IDexRequest) 
 	permit2Address := uatu.FormatEvmAddress(d.Dex.Permit2Address)
 	universalRouterAddress := uatu.FormatEvmAddress(d.Dex.UniversalRouterAddress)
 	tokenIn := d.TokenIn
-	permit2Allowance, err := c.getPermit2TokenAllowance(
-		ctx,
-		permit2Address,
-		d.WalletAddress, d.TokenIn,
-		universalRouterAddress,
-	)
-	if err != nil {
-		return nil, err
-	}
-	erc20Allowance, err := c.getERC20Allowance(
-		ctx,
-		tokenIn,
-		d.WalletAddress,
-		permit2Address,
-	)
-	if err != nil {
-		return nil, err
-	}
 	now := big.NewInt(time.Now().Unix())
 	deadline := big.NewInt(time.Now().Add(swapDeadline).Unix())
 	var encodedPermit2Approval, enodedERC20TokenApproval []byte
 
-	if permit2Allowance.Expiration.Cmp(now) <= 0 || permit2Allowance.Amount.Cmp(d.AmountIn) < 0 {
-		expiration := big.NewInt(time.Now().Add(permit2ApprovalDuration).Unix())
-		encodedPermit2Approval, err = encodePermit2Approval(
-			tokenIn,
-			universalRouterAddress,
-			maxUint160,
-			expiration,
-		)
+	if !d.WrapNativeInput {
+		permit2Allowance, err := c.getPermit2TokenAllowance(ctx, permit2Address, d.WalletAddress, d.TokenIn, universalRouterAddress)
 		if err != nil {
 			return nil, err
 		}
-	}
-	if erc20Allowance.Cmp(d.AmountIn) <= 0 {
-		enodedERC20TokenApproval, err = encodeERC20Token(d.AmountIn, permit2Address)
+		erc20Allowance, err := c.getERC20Allowance(ctx, tokenIn, d.WalletAddress, permit2Address)
 		if err != nil {
 			return nil, err
+		}
+		if permit2Allowance.Expiration.Cmp(now) <= 0 || permit2Allowance.Amount.Cmp(d.AmountIn) < 0 {
+			expiration := big.NewInt(time.Now().Add(permit2ApprovalDuration).Unix())
+			encodedPermit2Approval, err = encodePermit2Approval(tokenIn, universalRouterAddress, maxUint160, expiration)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if erc20Allowance.Cmp(d.AmountIn) <= 0 {
+			enodedERC20TokenApproval, err = encodeERC20Token(d.AmountIn, permit2Address)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -377,18 +404,40 @@ func (c *Client) swapV2UniversalRouter(ctx context.Context, d uatu.IDexRequest) 
 		return nil, err
 	}
 
+	recipient := d.WalletAddress
+	if d.UnwrapNativeOutput {
+		recipient = universalRouterRecipient
+	}
 	input, err := encodeV2SwapExactIn(
-		d.WalletAddress,
+		recipient,
 		d.AmountIn,
 		amountOut,
 		[]common.Address{tokenIn, d.TokenOut},
-		true,
+		!d.WrapNativeInput,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	swapCalldata, err := encodeUniversalRouterExecute(V2_SWAP, input, deadline)
+	commands := []Command{V2_SWAP}
+	inputs := [][]byte{input}
+	if d.WrapNativeInput {
+		wrapInput, err := encodeWrapETH(universalRouterRecipient, d.AmountIn)
+		if err != nil {
+			return nil, err
+		}
+		commands = append([]Command{WRAP_ETH}, commands...)
+		inputs = append([][]byte{wrapInput}, inputs...)
+	}
+	if d.UnwrapNativeOutput {
+		unwrapInput, err := encodeUnwrapWETH(d.WalletAddress, amountOut)
+		if err != nil {
+			return nil, err
+		}
+		commands = append(commands, UNWRAP_WETH)
+		inputs = append(inputs, unwrapInput)
+	}
+	swapCalldata, err := encodeUniversalRouterExecute(commands, inputs, deadline)
 	if err != nil {
 		return nil, err
 	}
@@ -398,6 +447,7 @@ func (c *Client) swapV2UniversalRouter(ctx context.Context, d uatu.IDexRequest) 
 		EncodedData:            swapCalldata,
 		EncodedERC20Approval:   enodedERC20TokenApproval,
 		EncodedPermit2Approval: encodedPermit2Approval,
+		NativeValue:            nativeValue(d.WrapNativeInput, d.AmountIn),
 		Dex:                    d.Dex,
 		RouterAddress:          universalRouterAddress,
 		PairAddress:            d.PairAddress,
@@ -461,39 +511,31 @@ func (c *Client) swapV3UniversalRouter(ctx context.Context, d uatu.IDexRequest) 
 	universalRouterAddress := uatu.FormatEvmAddress(d.Dex.UniversalRouterAddress)
 	permit2Address := uatu.FormatEvmAddress(d.Dex.Permit2Address)
 	quoterAddress := uatu.FormatEvmAddress(d.Dex.V3QuoterAddress)
-	permit2Allowance, err := c.getPermit2TokenAllowance(
-		ctx,
-		permit2Address,
-		d.WalletAddress, d.TokenIn,
-		universalRouterAddress,
-	)
-	if err != nil {
-		return nil, err
-	}
-	erc20Allowance, err := c.getERC20Allowance(
-		ctx,
-		tokenIn,
-		d.WalletAddress,
-		permit2Address,
-	)
-	if err != nil {
-		return nil, err
-	}
 	now := big.NewInt(time.Now().Unix())
 	deadline := big.NewInt(time.Now().Add(swapDeadline).Unix())
 	var encodedPermit2Approval, enodedERC20TokenApproval []byte
 
-	if permit2Allowance.Expiration.Cmp(now) <= 0 || permit2Allowance.Amount.Cmp(d.AmountIn) < 0 {
-		expiration := big.NewInt(time.Now().Add(permit2ApprovalDuration).Unix())
-		encodedPermit2Approval, err = encodePermit2Approval(tokenIn, universalRouterAddress, maxUint160, expiration)
+	if !d.WrapNativeInput {
+		permit2Allowance, err := c.getPermit2TokenAllowance(ctx, permit2Address, d.WalletAddress, d.TokenIn, universalRouterAddress)
 		if err != nil {
 			return nil, err
 		}
-	}
-	if erc20Allowance.Cmp(d.AmountIn) <= 0 {
-		enodedERC20TokenApproval, err = encodeERC20Token(d.AmountIn, permit2Address)
+		erc20Allowance, err := c.getERC20Allowance(ctx, tokenIn, d.WalletAddress, permit2Address)
 		if err != nil {
 			return nil, err
+		}
+		if permit2Allowance.Expiration.Cmp(now) <= 0 || permit2Allowance.Amount.Cmp(d.AmountIn) < 0 {
+			expiration := big.NewInt(time.Now().Add(permit2ApprovalDuration).Unix())
+			encodedPermit2Approval, err = encodePermit2Approval(tokenIn, universalRouterAddress, maxUint160, expiration)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if erc20Allowance.Cmp(d.AmountIn) <= 0 {
+			enodedERC20TokenApproval, err = encodeERC20Token(d.AmountIn, permit2Address)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	pool, err := c.GetV3Pool(d.PairAddress)
@@ -508,17 +550,39 @@ func (c *Client) swapV3UniversalRouter(ctx context.Context, d uatu.IDexRequest) 
 		return nil, err
 	}
 
+	recipient := d.WalletAddress
+	if d.UnwrapNativeOutput {
+		recipient = universalRouterRecipient
+	}
 	input, err := encodeV3InputParams(
-		d.WalletAddress,
+		recipient,
 		d.AmountIn,
 		amountOut,
 		tokenIn, pool.Fee, d.TokenOut,
-		true,
+		!d.WrapNativeInput,
 	)
 	if err != nil {
 		return nil, err
 	}
-	swapCalldata, err := encodeUniversalRouterExecute(V3_SWAP, input, deadline)
+	commands := []Command{V3_SWAP}
+	inputs := [][]byte{input}
+	if d.WrapNativeInput {
+		wrapInput, err := encodeWrapETH(universalRouterRecipient, d.AmountIn)
+		if err != nil {
+			return nil, err
+		}
+		commands = append([]Command{WRAP_ETH}, commands...)
+		inputs = append([][]byte{wrapInput}, inputs...)
+	}
+	if d.UnwrapNativeOutput {
+		unwrapInput, err := encodeUnwrapWETH(d.WalletAddress, amountOut)
+		if err != nil {
+			return nil, err
+		}
+		commands = append(commands, UNWRAP_WETH)
+		inputs = append(inputs, unwrapInput)
+	}
+	swapCalldata, err := encodeUniversalRouterExecute(commands, inputs, deadline)
 	if err != nil {
 		return nil, err
 	}
@@ -528,11 +592,19 @@ func (c *Client) swapV3UniversalRouter(ctx context.Context, d uatu.IDexRequest) 
 		EncodedData:            swapCalldata,
 		EncodedERC20Approval:   enodedERC20TokenApproval,
 		EncodedPermit2Approval: encodedPermit2Approval,
+		NativeValue:            nativeValue(d.WrapNativeInput, d.AmountIn),
 		Dex:                    d.Dex,
 		RouterAddress:          universalRouterAddress,
 		PairAddress:            d.PairAddress,
 		Route:                  routeWithFee(DexRoutes[d.Dex.Slug], poolFeeAmount(d.AmountIn, pool.Fee)),
 	}, nil
+}
+
+func nativeValue(wrapNativeInput bool, amountIn *big.Int) *big.Int {
+	if !wrapNativeInput {
+		return nil
+	}
+	return new(big.Int).Set(amountIn)
 }
 
 func (c *Client) Uniswap(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexResponse, error) {

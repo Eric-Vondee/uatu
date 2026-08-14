@@ -193,15 +193,32 @@ func (c *Client) Aerodrome(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexR
 	if err != nil {
 		return nil, err
 	}
-
+	recipient := d.WalletAddress
+	if d.UnwrapNativeOutput {
+		recipient = routerAddress
+	}
 	swapCallData, err := encodeExactInputSingle(
-		d.WalletAddress,
+		recipient,
 		d.AmountIn, amountOut,
 		tokenIn, d.TokenOut,
 		pool.TickSpacing, deadline,
 	)
 	if err != nil {
 		return nil, err
+	}
+	if d.UnwrapNativeOutput {
+		routerABI, err := aerodrome.AerodromeRouterMetaData.GetAbi()
+		if err != nil {
+			return nil, fmt.Errorf("could not parse cl swap router abi: %w", err)
+		}
+		unwrapCallData, err := routerABI.Pack("unwrapWETH9", amountOut, d.WalletAddress)
+		if err != nil {
+			return nil, fmt.Errorf("could not encode WETH unwrap calldata: %w", err)
+		}
+		swapCallData, err = routerABI.Pack("multicall", [][]byte{swapCallData, unwrapCallData})
+		if err != nil {
+			return nil, fmt.Errorf("could not encode native output multicall: %w", err)
+		}
 	}
 	return &uatu.IDexResponse{
 		AmountIn:             d.AmountIn,

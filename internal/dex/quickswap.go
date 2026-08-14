@@ -41,16 +41,18 @@ func encodeQuickSwapV2Path(
 	recipient common.Address,
 	amountIn, amountOutMin, deadline *big.Int,
 	tokenIn, tokenOut common.Address,
+	unwrapNativeOutput bool,
 ) ([]byte, error) {
 	routerABI, err := contracts.V2RouterMetaData.GetAbi()
 	if err != nil {
 		return nil, fmt.Errorf("could not parse QuickSwap V2 router ABI: %w", err)
 	}
 	path := []common.Address{tokenIn, tokenOut}
-	calldata, err := routerABI.Pack(
-		"swapExactTokensForTokens",
-		amountIn, amountOutMin, path, recipient, deadline,
-	)
+	method := "swapExactTokensForTokens"
+	if unwrapNativeOutput {
+		method = "swapExactTokensForETH"
+	}
+	calldata, err := routerABI.Pack(method, amountIn, amountOutMin, path, recipient, deadline)
 	if err != nil {
 		return nil, fmt.Errorf("could not encode QuickSwap swapExactTokensForTokens calldata: %w", err)
 	}
@@ -118,6 +120,7 @@ func (c *Client) quickSwapV2(ctx context.Context, d uatu.IDexRequest) (*uatu.IDe
 		d.WalletAddress,
 		d.AmountIn, amountOut, deadline,
 		tokenIn, d.TokenOut,
+		d.UnwrapNativeOutput,
 	)
 	if err != nil {
 		return nil, err
@@ -168,14 +171,31 @@ func (c *Client) quickSwapV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDe
 	if err != nil {
 		return nil, err
 	}
-
+	recipient := d.WalletAddress
+	if d.UnwrapNativeOutput {
+		recipient = routerAddress
+	}
 	swapCallData, err := encodeQuickSwapExactInputSingle(
-		d.WalletAddress,
+		recipient,
 		d.AmountIn, amountOut, deadline,
 		tokenIn, d.TokenOut,
 	)
 	if err != nil {
 		return nil, err
+	}
+	if d.UnwrapNativeOutput {
+		routerABI, err := contracts.V3QuickSwapRouterMetaData.GetAbi()
+		if err != nil {
+			return nil, fmt.Errorf("could not parse QuickSwap V3 router ABI: %w", err)
+		}
+		unwrapCallData, err := routerABI.Pack("unwrapWNativeToken", amountOut, d.WalletAddress)
+		if err != nil {
+			return nil, fmt.Errorf("could not encode wrapped-native unwrap calldata: %w", err)
+		}
+		swapCallData, err = routerABI.Pack("multicall", [][]byte{swapCallData, unwrapCallData})
+		if err != nil {
+			return nil, fmt.Errorf("could not encode native output multicall: %w", err)
+		}
 	}
 	return &uatu.IDexResponse{
 		AmountIn:             d.AmountIn,
