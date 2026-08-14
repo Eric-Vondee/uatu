@@ -8,6 +8,15 @@
   "blockChainLogo": "https://pub-4d104cbff77a46759432960f97284660.r2.dev/blockchains/gnosis.png",
   "tokens": [
     {
+      "name": "XDAI",
+      "symbol": "XDAI",
+      "address": "0x0000000000000000000000000000000000000000",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/xdai.webp",
+      "slug": "xdai",
+      "isStableCoin": false
+    },
+    {
       "name": "Gnosis",
       "symbol": "GNO",
       "address": "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
@@ -21,7 +30,7 @@
       "symbol": "WXDAI",
       "address": "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d",
       "decimals": 18,
-      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/xdai.svg",
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/xdai.webp",
       "slug": "wxdai",
       "isStableCoin": true
     },

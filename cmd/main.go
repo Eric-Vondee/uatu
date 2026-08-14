@@ -59,7 +59,10 @@ func main() {
 	}
 	defer stopJobs()
 
-	srv := server.New(*cfg, logger, quoteRepo, chainRepo, redisClient)
+	srv, err := server.New(*cfg, logger, quoteRepo, chainRepo, redisClient)
+	if err != nil {
+		log.Fatalf("Failed to create server: %v", err)
+	}
 	if err := srv.Run(); err != nil {
 		log.Fatalf("Server error: %v", err)
 	}

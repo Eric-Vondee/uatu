@@ -59,9 +59,40 @@ systemd unit using `EnvironmentFile=` — no file needs to exist on disk.
 | `<CHAIN>_RPC_URL`                               | RPC endpoint per chain (e.g. `ETHEREUM_RPC_URL`)     |
 | `OTEL_ENABLED`                                  | Toggle OpenTelemetry export                          |
 | `OTEL_ENDPOINT`, `OTEL_USE_TLS`, `OTEL_HEADERS` | OTLP exporter settings                               |
+| `RATE_LIMIT_TOKENS`                             | Requests allowed per client per interval (default 60) |
+| `RATE_LIMIT_INTERVAL`                           | Budget interval, e.g. `1m` (default `1m`)            |
+| `RATE_LIMIT_TRUSTED_HEADER`                     | Client-IP header set by a trusted reverse proxy      |
+| `RATE_LIMIT_TRUSTED_PROXY_CIDRS`                | Comma-separated CIDRs allowed to supply that header  |
 
 All fields are validated at startup; the process exits if any required value is
 missing.
+
+### Rate limiting behind a proxy
+
+Requests are limited by client IP with the Redis-backed `go-limiter` store, so
+the budget is shared by every application replica. IPv6 addresses are bucketed by
+their `/64` network so a client cannot rotate addresses within the same network to
+obtain a new budget.
+
+When clients connect directly, leave both proxy settings unset. Behind a proxy,
+set **both** the header it writes and the CIDRs of every trusted proxy that can
+connect to this service. Startup rejects either setting on its own. For example:
+
+```env
+RATE_LIMIT_TRUSTED_HEADER=X-Forwarded-For
+RATE_LIMIT_TRUSTED_PROXY_CIDRS=10.0.0.0/8,fd00:1234::/48
+```
+
+The forwarding header is ignored unless the TCP peer (`r.RemoteAddr`) belongs to
+that CIDR allowlist. For `X-Forwarded-For`, the limiter walks the chain from
+right to left, skips trusted proxy addresses, and uses the first untrusted address
+as the client. Your reverse proxy must append the address of its direct peer and
+must not expose this service to the public internet outside the configured CIDRs.
+
+For a single-value header such as `CF-Connecting-IP`, configure the CDN or edge
+proxy CIDRs and ensure that it overwrites the inbound header on every request.
+An absent or malformed forwarding header falls back to the known proxy address,
+which fails closed rather than trusting an attacker-controlled value.
 
 ## Running
 

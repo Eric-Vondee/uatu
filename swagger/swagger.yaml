@@ -214,7 +214,7 @@ definitions:
       dex:
         type: string
       fees:
-        description: Fee in the input token's smallest unit.
+        description: Fees is the route fee in the input token's smallest unit.
         type: string
       logo:
         type: string
@@ -228,7 +228,6 @@ definitions:
       amountOut:
         type: string
       deadline:
-        description: Unix timestamp when this route quote expires.
         type: integer
       route:
         $ref: '#/definitions/uatu.Route'
@@ -289,6 +288,47 @@ paths:
           schema:
             $ref: '#/definitions/server.APIResponse'
       summary: List supported blockchains
+      tags:
+      - catalogue
+  /blockchains/dex:
+    get:
+      description: |-
+        Returns the DEX seeded under the given slug on the given chain, including
+        the router, factory, quoter and settlement addresses used to price and
+        encode a swap. Both chainId and slug are required, as a slug identifies a
+        DEX only within one chain.
+      parameters:
+      - description: EVM chain ID
+        in: query
+        name: chainId
+        required: true
+        type: integer
+      - description: DEX slug, e.g. uniswap
+        in: query
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/server.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/uatu.Dex'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/server.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/server.APIResponse'
+      summary: Get a DEX on a chain
       tags:
       - catalogue
   /blockchains/pools:

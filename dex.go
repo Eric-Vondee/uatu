@@ -36,6 +36,8 @@ type IDexRequest struct {
 	ChainId                                       uint
 	Dex                                           Dex
 	TokenIn, TokenOut, WalletAddress, PairAddress common.Address
+	WrapNativeInput                               bool
+	UnwrapNativeOutput                            bool
 	PoolType                                      string
 }
 
@@ -50,10 +52,10 @@ type Route struct {
 type IDexResponse struct {
 	AmountIn, AmountOut                                       *big.Int
 	EncodedData, EncodedERC20Approval, EncodedPermit2Approval []byte
-
-	Dex           Dex
-	RouterAddress common.Address
-	PairAddress   common.Address
-	RegisterOrder func(context.Context) error
-	Route         Route
+	NativeValue                                               *big.Int
+	Dex                                                       Dex
+	RouterAddress                                             common.Address
+	PairAddress                                               common.Address
+	RegisterOrder                                             func(context.Context) error
+	Route                                                     Route
 }

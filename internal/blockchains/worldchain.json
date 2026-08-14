@@ -4,15 +4,24 @@
   "chainId": 480,
   "blockExplorer": "https://worldscan.org",
   "rpcUrl": "https://worldchain-mainnet.g.alchemy.com/public",
-  "nativeToken": "WRLD",
+  "nativeToken": "ETH",
   "blockChainLogo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/world.svg",
   "tokens": [
+    {
+      "name": "ETHER",
+      "symbol": "ETH",
+      "address": "0x0000000000000000000000000000000000000000",
+      "decimals": 18,
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/eth.svg",
+      "slug": "eth",
+      "isStableCoin": false
+    },
     {
       "name": "Worldcoin",
       "symbol": "WLD",
       "address": "0x2cFc85d8E48F8EAB294be644d9E25C3030863003",
       "decimals": 18,
-      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/wld.svg",
+      "logo": "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/world.svg",
       "slug": "wld",
       "isStableCoin": false
     },
