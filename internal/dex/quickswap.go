@@ -9,7 +9,8 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/uatu"
-	"github.com/uatu/internal/contracts"
+	"github.com/uatu/internal/contracts/quickswap"
+	"github.com/uatu/internal/contracts/uniswap"
 )
 
 func encodeQuickSwapExactInputSingle(
@@ -17,11 +18,11 @@ func encodeQuickSwapExactInputSingle(
 	amountIn, amountOutMin, deadline *big.Int,
 	tokenIn, tokenOut common.Address,
 ) ([]byte, error) {
-	routerABI, err := contracts.V3QuickSwapRouterMetaData.GetAbi()
+	routerABI, err := quickswap.V3QuickSwapRouterMetaData.GetAbi()
 	if err != nil {
 		return nil, fmt.Errorf("could not parse QuickSwap V3 router ABI: %w", err)
 	}
-	params := contracts.ISwapRouterExactInputSingleParams{
+	params := quickswap.ISwapRouterExactInputSingleParams{
 		TokenIn:          tokenIn,
 		TokenOut:         tokenOut,
 		Recipient:        recipient,
@@ -43,7 +44,7 @@ func encodeQuickSwapV2Path(
 	tokenIn, tokenOut common.Address,
 	unwrapNativeOutput bool,
 ) ([]byte, error) {
-	routerABI, err := contracts.V2RouterMetaData.GetAbi()
+	routerABI, err := uniswap.V2RouterMetaData.GetAbi()
 	if err != nil {
 		return nil, fmt.Errorf("could not parse QuickSwap V2 router ABI: %w", err)
 	}
@@ -60,7 +61,7 @@ func encodeQuickSwapV2Path(
 }
 
 func (c *Client) GetQuickSwapV3Pair(address, token0, token1 common.Address) ([]V3Pair, error) {
-	factoryContract, err := contracts.NewV3QuickSwapFactoryCaller(address, c.client)
+	factoryContract, err := quickswap.NewV3QuickSwapFactoryCaller(address, c.client)
 	if err != nil {
 		return nil, fmt.Errorf("could not bind QuickSwap v3 factory: %w", err)
 	}
@@ -184,7 +185,7 @@ func (c *Client) quickSwapV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDe
 		return nil, err
 	}
 	if d.UnwrapNativeOutput {
-		routerABI, err := contracts.V3QuickSwapRouterMetaData.GetAbi()
+		routerABI, err := quickswap.V3QuickSwapRouterMetaData.GetAbi()
 		if err != nil {
 			return nil, fmt.Errorf("could not parse QuickSwap V3 router ABI: %w", err)
 		}

@@ -38,7 +38,7 @@ type AerodromePair struct {
 }
 
 func (c *Client) GetAerodromePair(address, token0, token1 common.Address) ([]AerodromePair, error) {
-	tickSpacings := []int64{1, 50, 100, 200, 2000}
+	tickSpacings := []int64{1, 5, 10, 50, 100, 200, 500, 3000, 10000}
 	factoryContract, err := aerodrome.NewAerodromeFactoryCaller(address, c.client)
 	if err != nil {
 		return nil, fmt.Errorf("could not bind v2 factory: %w", err)

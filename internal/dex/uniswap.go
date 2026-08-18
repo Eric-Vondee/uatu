@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/uatu"
-	"github.com/uatu/internal/contracts"
+	"github.com/uatu/internal/contracts/uniswap"
 )
 
 type Command string
@@ -59,7 +59,7 @@ type V3Pair struct {
 }
 
 func (c *Client) GetV2Pair(address, token0, token1 common.Address) (common.Address, error) {
-	factoryContract, err := contracts.NewV2FactoryCaller(address, c.client)
+	factoryContract, err := uniswap.NewV2FactoryCaller(address, c.client)
 	if err != nil {
 		return common.Address{}, fmt.Errorf("could not bind v2 factory: %w", err)
 	}
@@ -71,7 +71,7 @@ func (c *Client) GetV2Pair(address, token0, token1 common.Address) (common.Addre
 }
 
 func (c *Client) GetV2Pool(address common.Address) (*V2Pool, error) {
-	poolContract, err := contracts.NewV2PoolCaller(address, c.client)
+	poolContract, err := uniswap.NewV2PoolCaller(address, c.client)
 	if err != nil {
 		return nil, fmt.Errorf("could not bind v2 pool: %w", err)
 	}
@@ -98,7 +98,7 @@ func (c *Client) GetV2Pool(address common.Address) (*V2Pool, error) {
 
 func (c *Client) GetV3Pair(address, token0, token1 common.Address) ([]V3Pair, error) {
 	fees := []int64{100, 500, 3000, 10000}
-	factoryContract, err := contracts.NewV3FactoryCaller(address, c.client)
+	factoryContract, err := uniswap.NewV3FactoryCaller(address, c.client)
 	if err != nil {
 		return nil, fmt.Errorf("could not bind v3 factory: %w", err)
 	}
@@ -118,7 +118,7 @@ func (c *Client) GetV3Pair(address, token0, token1 common.Address) ([]V3Pair, er
 }
 
 func (c *Client) GetV3Pool(address common.Address) (*V3Pool, error) {
-	poolContract, err := contracts.NewV3PoolCaller(address, c.client)
+	poolContract, err := uniswap.NewV3PoolCaller(address, c.client)
 	if err != nil {
 		return nil, fmt.Errorf("could not bind v3 pool: %w", err)
 	}
@@ -163,7 +163,7 @@ func (c *Client) getV2AmountOut(
 	amountIn, reserveIn, reserveOut *big.Int,
 	router common.Address,
 ) (*big.Int, error) {
-	routerContract, err := contracts.NewV2RouterCaller(router, c.client)
+	routerContract, err := uniswap.NewV2RouterCaller(router, c.client)
 	if err != nil {
 		return nil, fmt.Errorf("could not bind router: %w", err)
 	}
@@ -182,18 +182,18 @@ func (c *Client) getV3AmountOut(
 	quoter, tokenIn, tokenOut common.Address,
 	fee *big.Int,
 ) (*big.Int, error) {
-	quoterContract, err := contracts.NewV3Quoter(quoter, c.client)
+	quoterContract, err := uniswap.NewV3Quoter(quoter, c.client)
 	if err != nil {
 		return nil, fmt.Errorf("could not bind v3 quoter: %w", err)
 	}
-	params := contracts.IQuoterV2QuoteExactInputSingleParams{
+	params := uniswap.IQuoterV2QuoteExactInputSingleParams{
 		TokenIn:           tokenIn,
 		TokenOut:          tokenOut,
 		AmountIn:          amountIn,
 		Fee:               fee,
 		SqrtPriceLimitX96: big.NewInt(0),
 	}
-	raw := &contracts.V3QuoterRaw{Contract: quoterContract}
+	raw := &uniswap.V3QuoterRaw{Contract: quoterContract}
 	var out []interface{}
 	if err := raw.Call(&bind.CallOpts{}, &out, "quoteExactInputSingle", params); err != nil {
 		return nil, fmt.Errorf("could not quote v3 amount out: %w", err)
@@ -307,11 +307,11 @@ func encodeV3InputParams(
 // 	amountIn, amountOutMin, fee *big.Int,
 // 	tokenIn, tokenOut common.Address,
 // ) ([]byte, error) {
-// 	routerABI, err := contracts.V3UniswapRouterMetaData.GetAbi()
+// 	routerABI, err := uniswap.V3UniswapRouterMetaData.GetAbi()
 // 	if err != nil {
 // 		return nil, fmt.Errorf("could not parse uniswap v3swap router abi: %w", err)
 // 	}
-// 	params := contracts.IV3SwapRouterExactInputSingleParams{
+// 	params := uniswap.IV3SwapRouterExactInputSingleParams{
 // 		TokenIn:           tokenIn,
 // 		TokenOut:          tokenOut,
 // 		Fee:               fee,
