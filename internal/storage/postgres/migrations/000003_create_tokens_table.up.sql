@@ -12,3 +12,6 @@ CREATE TABLE IF NOT EXISTS tokens (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_tokens_chain_address
+    ON tokens (blockchain_id, lower(address));

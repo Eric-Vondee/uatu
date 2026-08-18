@@ -5,6 +5,8 @@ CREATE TABLE If NOT EXISTS quotes(
     quote_id  VARCHAR(255)  NOT NULL UNIQUE,
     amount_in NUMERIC(78,0) NOT NULL CHECK (amount_in >= 0),
     amount_out NUMERIC(78,0) NOT NULL CHECK (amount_out >= 0),
+    amount_out_minimum NUMERIC(78,0) NOT NULL DEFAULT 0 CHECK (amount_out_minimum >= 0),
+    slippage_bps INTEGER NOT NULL DEFAULT 0,
     amount_in_float  DOUBLE PRECISION NOT NULL,
     amount_out_float DOUBLE PRECISION NOT NULL,
     origin_chain_id VARCHAR(125) NOT NULL,
