@@ -108,6 +108,12 @@
       "slug": "quickswap"
     },
     {
+      "name": "SushiSwap",
+      "v2RouterAddress": "0x6bded42c6da8fbf0d2ba55b2fa120c5e0c8d7891",
+      "v2FactoryAddress": "0x71524b4f93c58fcbf659783284e38825f0622859",
+      "slug": "sushiswap"
+    },
+    {
       "name": "CowSwap",
       "slug": "cowswap"
     }

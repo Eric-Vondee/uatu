@@ -86,6 +86,12 @@
       "slug": "pancakeswap"
     },
     {
+      "name": "SushiSwap",
+      "v2RouterAddress": "0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f",
+      "v2FactoryAddress": "0xc0aee478e3658e2610c5f7a4a2e1777ce9e4f2ac",
+      "slug": "sushiswap"
+    },
+    {
       "name": "CowSwap",
       "slug": "cowswap"
     }

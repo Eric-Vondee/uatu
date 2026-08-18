@@ -64,6 +64,12 @@
       "permit2Address": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
       "universalRouterAddress": "0x643770E279d5D0733F21d6DC03A8efbABf3255B4",
       "slug": "uniswap"
+    },
+    {
+      "name": "SushiSwap",
+      "v2RouterAddress": "0xb45e53277a7e0f1d35f2a77160e91e25507f1763",
+      "v2FactoryAddress": "0xc35dadb65012ec5796536bd9864ed8773abc74c4",
+      "slug": "sushiswap"
     }
   ],
   "slug": "celo",

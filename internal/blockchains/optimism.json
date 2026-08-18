@@ -82,6 +82,12 @@
       "permit2Address": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
       "universalRouterAddress": "0x851116d9223fabed8e56c0e6b8ad0c31d98b3507",
       "slug": "uniswap"
+    },
+    {
+      "name": "SushiSwap",
+      "v2RouterAddress": "0x2abf469074dc0b54d793850807e6eb5faf2625b1",
+      "v2FactoryAddress": "0xfbc12984689e5f15626bad03ad60160fe98b303c",
+      "slug": "sushiswap"
     }
   ],
   "slug": "optimism",
