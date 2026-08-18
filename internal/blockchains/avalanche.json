@@ -84,6 +84,23 @@
       "slug": "uniswap"
     },
     {
+      "name": "Pharoah",
+      "v2RouterAddress": "0x9CEE04bDcE127DA7E448A333f006DEFb3d5e38cC",
+      "v2FactoryAddress": "0x85448bF2F589ab1F56225DF5167c63f57758f8c1",
+      "v3FactoryAddress": "0xAE6E5c62328ade73ceefD42228528b70c8157D0d",
+      "v3RouterAddress": "0xc8B8fCbDb5C019D7802fFb0b39603395D7d3915c",
+      "v3QuoterAddress": "0xB7297301b7CC659BB96D51754643A0Df6eEA2138",
+      "permit2Address": "",
+      "universalRouterAddress": "",
+      "slug": "pharoah"
+    },
+    {
+      "name": "SushiSwap",
+      "v2RouterAddress": "0x1b02da8cb0d097eb8d57a175b88c7d8b47997506",
+      "v2FactoryAddress": "0xc35dadb65012ec5796536bd9864ed8773abc74c4",
+      "slug": "sushiswap"
+    },
+    {
       "name": "CowSwap",
       "slug": "cowswap"
     }

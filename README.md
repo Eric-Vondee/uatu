@@ -1,7 +1,7 @@
 # uatu
 
 A DEX aggregation and swap-quote API for EVM chains. It maintains a catalogue of
-blockchains, tokens, DEXes and liquidity pools across 18 networks, and serves
+blockchains, tokens, DEXes and liquidity pools across 17 networks, and serves
 executable swap quotes built from on-chain AMM data.
 
 ## What it does
@@ -14,9 +14,11 @@ executable swap quotes built from on-chain AMM data.
 - **Discovery** — a seeding CLI walks each chain's token list, queries the v2 and
   v3 factories over RPC to find real pools, and persists what it finds.
 
-Supported protocols include Uniswap v2/v3 (+ Universal Router), PancakeSwap,
-CoW Swap, Velodrome, Aerodrome, Merchant Moe and Lithos. Which protocols are
-available on a given chain is defined per chain in `internal/blockchains/`.
+Supported protocols are Uniswap v2/v3 (+ Universal Router), SushiSwap,
+PancakeSwap, QuickSwap, Aerodrome, Pharoah, Agni Finance, OkuTrade and CoW Swap.
+Which protocols are available on a given chain is defined per chain in
+`internal/blockchains/`; the quote path dispatches on the DEX slug in
+`internal/dex/main.go`.
 
 ## Layout
 

@@ -86,6 +86,12 @@
       "slug": "oku"
     },
     {
+      "name": "SushiSwap",
+      "v2RouterAddress": "0x2abf469074dc0b54d793850807e6eb5faf2625b1",
+      "v2FactoryAddress": "0xfbc12984689e5f15626bad03ad60160fe98b303c",
+      "slug": "sushiswap"
+    },
+    {
       "name": "CowSwap",
       "slug": "cowswap"
     }
