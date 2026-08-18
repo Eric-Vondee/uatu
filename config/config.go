@@ -54,7 +54,6 @@ type Config struct {
 		GNOSIS    string `mapstructure:"GNOSIS_RPC_URL" validate:"required"`
 		INK       string `mapstructure:"INK_RPC_URL" validate:"required"`
 		LINEA     string `mapstructure:"LINEA_RPC_URL" validate:"required"`
-		LISK      string `mapstructure:"LISK_RPC_URL" validate:"required"`
 		MANTLE    string `mapstructure:"MANTLE_RPC_URL" validate:"required"`
 		MONAD     string `mapstructure:"MONAD_RPC_URL" validate:"required"`
 		OP        string `mapstructure:"OPTIMISM_RPC_URL" validate:"required"`
@@ -133,8 +132,6 @@ func (c *Config) GetRPC(slug string) string {
 		return c.RPC.INK
 	case "linea":
 		return c.RPC.LINEA
-	case "lisk":
-		return c.RPC.LISK
 	case "mantle":
 		return c.RPC.MANTLE
 	case "monad":
