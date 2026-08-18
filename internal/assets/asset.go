@@ -9,4 +9,5 @@ const (
 	PancakSwap = "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/dex/pancakeswap.jpeg"
 	SushiSwap  = "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/dex/sushiswap.jpeg"
 	Uniswap    = "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/dex/uniswap.png"
+	Pharoah    = "https://pub-24d20d8084c94881864eeeb6799e564e.r2.dev/dex/pharoah.jpeg"
 )

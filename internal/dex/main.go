@@ -31,6 +31,7 @@ var DexRoutes = map[string]uatu.Route{
 	"cowswap":     {Name: "CowSwap", Logo: assets.CowSwap, Dex: "cowswap"},
 	"oku":         {Name: "OkuTrade", Logo: assets.Oku, Dex: "oku"},
 	"pancakeswap": {Name: "PancakeSwap", Logo: assets.PancakSwap, Dex: "pancakeswap"},
+	"pharoah":     {Name: "Pharoah", Logo: assets.Pharoah, Dex: "pharoah"},
 	"quickswap":   {Name: "QuickSwap", Logo: assets.QuickSwap, Dex: "quickswap"},
 	"sushiswap":   {Name: "SushiSwap", Logo: assets.SushiSwap, Dex: "sushiswap"},
 	"uniswap":     {Name: "Uniswap", Logo: assets.Uniswap, Dex: "uniswap"},
@@ -233,12 +234,16 @@ func GetDexQuotes(
 			switch route.dex.Slug {
 			case "uniswap", "pancakeswap", "oku":
 				output, err = client.Uniswap(ctx, dexRequest)
+			case "sushiswap":
+				output, err = client.SushiSwap(ctx, dexRequest)
 			case "agni":
 				output, err = client.Agni(ctx, dexRequest)
 			case "quickswap":
 				output, err = client.QuickSwap(ctx, dexRequest)
 			case "aerodrome":
 				output, err = client.Aerodrome(ctx, dexRequest)
+			case "pharoah":
+				output, err = client.Pharoah(ctx, dexRequest)
 			case CowSlug:
 				output, err = client.CowSwap(ctx, dexRequest)
 			default:
