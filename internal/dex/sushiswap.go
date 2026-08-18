@@ -71,8 +71,9 @@ func (c *Client) SushiSwap(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexR
 	if err != nil {
 		return nil, err
 	}
+	amountOutMin := applySlippage(amountOut, d.SlippageBps)
 	calldata, err := encodeSushiSwapV2ExactInput(
-		d.WalletAddress, d.AmountIn, amountOut,
+		d.WalletAddress, d.AmountIn, amountOutMin,
 		big.NewInt(time.Now().Add(swapDeadline).Unix()),
 		d.TokenIn, d.TokenOut, d.WrapNativeInput, d.UnwrapNativeOutput,
 	)
@@ -80,7 +81,8 @@ func (c *Client) SushiSwap(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexR
 		return nil, fmt.Errorf("could not encode SushiSwap V2 swap: %w", err)
 	}
 	return &uatu.IDexResponse{
-		AmountIn: d.AmountIn, AmountOut: amountOut, EncodedData: calldata,
+		AmountIn: d.AmountIn, AmountOut: amountOut, AmountOutMinimum: amountOutMin,
+		EncodedData:          calldata,
 		EncodedERC20Approval: approval, NativeValue: nativeValue(d.WrapNativeInput, d.AmountIn),
 		Dex: d.Dex, RouterAddress: routerAddress, PairAddress: d.PairAddress,
 		Route: routeWithPoolFee(DexRoutes["sushiswap"], d.AmountIn, d.PoolFee),

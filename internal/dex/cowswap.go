@@ -47,13 +47,14 @@ const (
 	// "{}" is the documented value for integrations that attach no metadata.
 	cowAppData = "{}"
 
-	// cowSlippageBps is how far below the quoted output the signed limit price
-	// sits. Orders are posted with a zero feeAmount because the orderbook
-	// rejects anything else, which means solvers recover the network cost out
-	// of the difference between the limit price and what they actually fill at.
-	// Signing the quote exactly would leave nothing to pay for gas and the
-	// order would never be picked up.
-	cowSlippageBps = 50
+	// cowMinSlippageBps is the floor on how far below the quoted output the
+	// signed limit price may sit. Orders are posted with a zero feeAmount
+	// because the orderbook rejects anything else, which means solvers recover
+	// the network cost out of the difference between the limit price and what
+	// they actually fill at. Signing the quote exactly would leave nothing to
+	// pay for gas and the order would never be picked up, so a caller asking
+	// for tighter slippage than this gets the floor instead.
+	cowMinSlippageBps = 50
 
 	// cowOrderValidity is how long a posted order stays fillable.
 	cowOrderValidity = swapDeadline
@@ -387,11 +388,11 @@ func (c *cowClient) PlaceOrder(
 	return nil
 }
 
-// cowApplySlippage reduces the quoted output by cowSlippageBps.
-func cowApplySlippage(amount *big.Int) *big.Int {
-	const bpsDenominator = 10_000
-	out := new(big.Int).Mul(amount, big.NewInt(bpsDenominator-cowSlippageBps))
-	return out.Div(out, big.NewInt(bpsDenominator))
+func cowSlippage(slippageBps uint) uint {
+	if slippageBps < cowMinSlippageBps {
+		return cowMinSlippageBps
+	}
+	return slippageBps
 }
 
 func cowAmount(field, value string) (*big.Int, error) {
@@ -477,7 +478,7 @@ func (c *Client) CowSwap(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRes
 	if signedSellAmount.Cmp(d.AmountIn) > 0 {
 		return nil, fmt.Errorf("cow quote sell amount %s exceeds requested amount %s", signedSellAmount, d.AmountIn)
 	}
-	minimumBuyAmount := cowApplySlippage(buyAmount)
+	minimumBuyAmount := applySlippage(buyAmount, cowSlippage(d.SlippageBps))
 	if minimumBuyAmount.Sign() == 0 {
 		return nil, fmt.Errorf("cow quote minimum buy amount is zero")
 	}
@@ -520,6 +521,7 @@ func (c *Client) CowSwap(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRes
 	return &uatu.IDexResponse{
 		AmountIn:             signedSellAmount,
 		AmountOut:            buyAmount,
+		AmountOutMinimum:     minimumBuyAmount,
 		EncodedData:          preSignCalldata,
 		EncodedERC20Approval: erc20Approval,
 		Dex:                  d.Dex,

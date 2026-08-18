@@ -119,11 +119,12 @@ func (c *Client) Agni(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespon
 	if err != nil {
 		return nil, err
 	}
+	amountOutMin := applySlippage(amountOut, d.SlippageBps)
 
 	swapCallData, err := encodeAgniExactInputSingle(
 		d.WalletAddress,
 		d.AmountIn,
-		amountOut,
+		amountOutMin,
 		pool.Fee,
 		tokenIn,
 		d.TokenOut,
@@ -136,6 +137,7 @@ func (c *Client) Agni(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespon
 	return &uatu.IDexResponse{
 		AmountIn:             d.AmountIn,
 		AmountOut:            amountOut,
+		AmountOutMinimum:     amountOutMin,
 		EncodedData:          swapCallData,
 		EncodedERC20Approval: encodedERC20TokenApproval,
 		Dex:                  d.Dex,

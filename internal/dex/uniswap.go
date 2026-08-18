@@ -403,6 +403,7 @@ func (c *Client) swapV2UniversalRouter(ctx context.Context, d uatu.IDexRequest) 
 	if err != nil {
 		return nil, err
 	}
+	amountOutMin := applySlippage(amountOut, d.SlippageBps)
 
 	recipient := d.WalletAddress
 	if d.UnwrapNativeOutput {
@@ -411,7 +412,7 @@ func (c *Client) swapV2UniversalRouter(ctx context.Context, d uatu.IDexRequest) 
 	input, err := encodeV2SwapExactIn(
 		recipient,
 		d.AmountIn,
-		amountOut,
+		amountOutMin,
 		[]common.Address{tokenIn, d.TokenOut},
 		!d.WrapNativeInput,
 	)
@@ -430,7 +431,7 @@ func (c *Client) swapV2UniversalRouter(ctx context.Context, d uatu.IDexRequest) 
 		inputs = append([][]byte{wrapInput}, inputs...)
 	}
 	if d.UnwrapNativeOutput {
-		unwrapInput, err := encodeUnwrapWETH(d.WalletAddress, amountOut)
+		unwrapInput, err := encodeUnwrapWETH(d.WalletAddress, amountOutMin)
 		if err != nil {
 			return nil, err
 		}
@@ -444,6 +445,7 @@ func (c *Client) swapV2UniversalRouter(ctx context.Context, d uatu.IDexRequest) 
 	return &uatu.IDexResponse{
 		AmountIn:               d.AmountIn,
 		AmountOut:              amountOut,
+		AmountOutMinimum:       amountOutMin,
 		EncodedData:            swapCalldata,
 		EncodedERC20Approval:   enodedERC20TokenApproval,
 		EncodedPermit2Approval: encodedPermit2Approval,
@@ -549,6 +551,7 @@ func (c *Client) swapV3UniversalRouter(ctx context.Context, d uatu.IDexRequest) 
 	if err != nil {
 		return nil, err
 	}
+	amountOutMin := applySlippage(amountOut, d.SlippageBps)
 
 	recipient := d.WalletAddress
 	if d.UnwrapNativeOutput {
@@ -557,7 +560,7 @@ func (c *Client) swapV3UniversalRouter(ctx context.Context, d uatu.IDexRequest) 
 	input, err := encodeV3InputParams(
 		recipient,
 		d.AmountIn,
-		amountOut,
+		amountOutMin,
 		tokenIn, pool.Fee, d.TokenOut,
 		!d.WrapNativeInput,
 	)
@@ -575,7 +578,7 @@ func (c *Client) swapV3UniversalRouter(ctx context.Context, d uatu.IDexRequest) 
 		inputs = append([][]byte{wrapInput}, inputs...)
 	}
 	if d.UnwrapNativeOutput {
-		unwrapInput, err := encodeUnwrapWETH(d.WalletAddress, amountOut)
+		unwrapInput, err := encodeUnwrapWETH(d.WalletAddress, amountOutMin)
 		if err != nil {
 			return nil, err
 		}
@@ -589,6 +592,7 @@ func (c *Client) swapV3UniversalRouter(ctx context.Context, d uatu.IDexRequest) 
 	return &uatu.IDexResponse{
 		AmountIn:               d.AmountIn,
 		AmountOut:              amountOut,
+		AmountOutMinimum:       amountOutMin,
 		EncodedData:            swapCalldata,
 		EncodedERC20Approval:   enodedERC20TokenApproval,
 		EncodedPermit2Approval: encodedPermit2Approval,

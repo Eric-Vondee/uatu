@@ -193,13 +193,14 @@ func (c *Client) Aerodrome(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexR
 	if err != nil {
 		return nil, err
 	}
+	amountOutMin := applySlippage(amountOut, d.SlippageBps)
 	recipient := d.WalletAddress
 	if d.UnwrapNativeOutput {
 		recipient = routerAddress
 	}
 	swapCallData, err := encodeExactInputSingle(
 		recipient,
-		d.AmountIn, amountOut,
+		d.AmountIn, amountOutMin,
 		tokenIn, d.TokenOut,
 		pool.TickSpacing, deadline,
 	)
@@ -211,7 +212,7 @@ func (c *Client) Aerodrome(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexR
 		if err != nil {
 			return nil, fmt.Errorf("could not parse cl swap router abi: %w", err)
 		}
-		unwrapCallData, err := routerABI.Pack("unwrapWETH9", amountOut, d.WalletAddress)
+		unwrapCallData, err := routerABI.Pack("unwrapWETH9", amountOutMin, d.WalletAddress)
 		if err != nil {
 			return nil, fmt.Errorf("could not encode WETH unwrap calldata: %w", err)
 		}
@@ -223,6 +224,7 @@ func (c *Client) Aerodrome(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexR
 	return &uatu.IDexResponse{
 		AmountIn:             d.AmountIn,
 		AmountOut:            amountOut,
+		AmountOutMinimum:     amountOutMin,
 		EncodedData:          swapCallData,
 		EncodedERC20Approval: enodedERC20TokenApproval,
 		Dex:                  d.Dex,
