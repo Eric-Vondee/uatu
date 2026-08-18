@@ -53,18 +53,20 @@ The `.env` file is a convenience for local development and is entirely optional.
 Anywhere the environment already supplies these values — a container, or a
 systemd unit using `EnvironmentFile=` — no file needs to exist on disk.
 
-| Variable                                        | Purpose                                              |
-| ----------------------------------------------- | ---------------------------------------------------- |
-| `PORT`                                          | HTTP listen port                                     |
-| `POSTGRES_DSN`                                  | Postgres connection string                           |
-| `REDIS_DSN`                                     | Redis connection URL, e.g. `redis://localhost:6379/` |
-| `<CHAIN>_RPC_URL`                               | RPC endpoint per chain (e.g. `ETHEREUM_RPC_URL`)     |
-| `OTEL_ENABLED`                                  | Toggle OpenTelemetry export                          |
-| `OTEL_ENDPOINT`, `OTEL_USE_TLS`, `OTEL_HEADERS` | OTLP exporter settings                               |
+| Variable                                        | Purpose                                               |
+| ----------------------------------------------- | ----------------------------------------------------- |
+| `PORT`                                          | HTTP listen port                                      |
+| `POSTGRES_DSN`                                  | Postgres connection string                            |
+| `REDIS_DSN`                                     | Redis connection URL, e.g. `redis://localhost:6379/`  |
+| `<CHAIN>_RPC_URL`                               | RPC endpoint per chain (e.g. `ETHEREUM_RPC_URL`)      |
+| `OTEL_ENABLED`                                  | Toggle OpenTelemetry export                           |
+| `OTEL_ENDPOINT`, `OTEL_USE_TLS`, `OTEL_HEADERS` | OTLP exporter settings                                |
+| `DEFAULT_SLIPPAGE_BPS`                          | Slippage applied when a quote omits it (default 50)   |
+| `MAX_SLIPPAGE_BPS`                              | Largest slippage a quote may request (default 5000)   |
 | `RATE_LIMIT_TOKENS`                             | Requests allowed per client per interval (default 60) |
-| `RATE_LIMIT_INTERVAL`                           | Budget interval, e.g. `1m` (default `1m`)            |
-| `RATE_LIMIT_TRUSTED_HEADER`                     | Client-IP header set by a trusted reverse proxy      |
-| `RATE_LIMIT_TRUSTED_PROXY_CIDRS`                | Comma-separated CIDRs allowed to supply that header  |
+| `RATE_LIMIT_INTERVAL`                           | Budget interval, e.g. `1m` (default `1m`)             |
+| `RATE_LIMIT_TRUSTED_HEADER`                     | Client-IP header set by a trusted reverse proxy       |
+| `RATE_LIMIT_TRUSTED_PROXY_CIDRS`                | Comma-separated CIDRs allowed to supply that header   |
 
 All fields are validated at startup; the process exits if any required value is
 missing.
@@ -121,9 +123,10 @@ the binary, so `migrate` needs only `POSTGRES_DSN` — no source tree and no
 separate migration tool.
 
 The seed step makes live RPC calls across every configured chain, so it takes a
-while and logs non-fatal warnings for endpoints that don't respond. Run it
-against a clean database — only the `blockchains` insert upserts, so re-running
-can produce duplicate-key errors on the other tables.
+while and logs non-fatal warnings for endpoints that don't respond. It is
+re-runnable: every table upserts, so a second run refreshes what the chain
+definitions describe. Pool balances, USD liquidity and market cap belong to the
+sync job rather than the seeder, so re-seeding leaves those figures alone.
 
 ## API
 
