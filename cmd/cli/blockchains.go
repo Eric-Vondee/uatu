@@ -285,6 +285,15 @@ func createTokens(ctx context.Context, db *bun.DB, tokens []uatu.Token) error {
 	}
 	_, err := db.NewInsert().
 		Model(&tokens).
+		On("CONFLICT (blockchain_id, lower(address)) DO UPDATE").
+		Set("name = EXCLUDED.name").
+		Set("symbol = EXCLUDED.symbol").
+		Set("address = EXCLUDED.address").
+		Set("decimals = EXCLUDED.decimals").
+		Set("logo = EXCLUDED.logo").
+		Set("slug = EXCLUDED.slug").
+		Set("is_stable_coin = EXCLUDED.is_stable_coin").
+		Set("updated_at = CURRENT_TIMESTAMP").
 		Exec(ctx)
 	return err
 }
@@ -295,6 +304,17 @@ func createDexes(ctx context.Context, db *bun.DB, dexes []uatu.Dex) error {
 	}
 	_, err := db.NewInsert().
 		Model(&dexes).
+		On("CONFLICT (blockchain_id, slug, version) DO UPDATE").
+		Set("name = EXCLUDED.name").
+		Set("v2_factory_address = EXCLUDED.v2_factory_address").
+		Set("v2_router_address = EXCLUDED.v2_router_address").
+		Set("v3_factory_address = EXCLUDED.v3_factory_address").
+		Set("v3_router_address = EXCLUDED.v3_router_address").
+		Set("v3_quoter_address = EXCLUDED.v3_quoter_address").
+		Set("permit2_address = EXCLUDED.permit2_address").
+		Set("settlement_address = EXCLUDED.settlement_address").
+		Set("universal_router_address = EXCLUDED.universal_router_address").
+		Set("updated_at = CURRENT_TIMESTAMP").
 		Exec(ctx)
 	return err
 }
@@ -305,6 +325,20 @@ func createPools(ctx context.Context, db *bun.DB, pools []uatu.Pool) error {
 	}
 	_, err := db.NewInsert().
 		Model(&pools).
+		On("CONFLICT (pair_address) DO UPDATE").
+		Set("name = EXCLUDED.name").
+		Set("dex_name = EXCLUDED.dex_name").
+		Set("symbol = EXCLUDED.symbol").
+		Set("base_token_address = EXCLUDED.base_token_address").
+		Set("quote_token_address = EXCLUDED.quote_token_address").
+		Set("base_token = EXCLUDED.base_token").
+		Set("quote_token = EXCLUDED.quote_token").
+		Set("chain_id = EXCLUDED.chain_id").
+		Set("pool_fee = EXCLUDED.pool_fee").
+		Set("pool_type = EXCLUDED.pool_type").
+		Set("tick_spacing = EXCLUDED.tick_spacing").
+		Set("is_active_pool = EXCLUDED.is_active_pool").
+		Set("updated_at = CURRENT_TIMESTAMP").
 		Exec(ctx)
 	return err
 }
