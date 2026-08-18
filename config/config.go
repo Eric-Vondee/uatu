@@ -11,6 +11,9 @@ import (
 	"github.com/spf13/viper"
 )
 
+// basisPointsDenominator is 100% expressed in basis points.
+const basisPointsDenominator = 10000
+
 type PostgresConfig struct {
 	DSN string `mapstructure:"POSTGRES_DSN"`
 }
@@ -30,11 +33,18 @@ type RateLimitConfig struct {
 	// reach the server directly cannot forge its own rate-limit key.
 	TrustedProxyCIDRs string `mapstructure:"RATE_LIMIT_TRUSTED_PROXY_CIDRS"`
 }
+
+type SlippageConfig struct {
+	DefaultBps uint `mapstructure:"DEFAULT_SLIPPAGE_BPS"`
+	MaxBps     uint `mapstructure:"MAX_SLIPPAGE_BPS"`
+}
+
 type Config struct {
 	AllowedOrigins []string        `mapstructure:"ALLOWED_ORIGINS" validate:"required"`
 	PORT           string          `mapstructure:"PORT" validate:"required"`
 	Redis          RedisConfig     `mapstructure:",squash" validate:"required"`
 	RateLimit      RateLimitConfig `mapstructure:",squash"`
+	Slippage       SlippageConfig  `mapstructure:",squash"`
 	Otel           struct {
 		IsEnabled bool   `mapstructure:"OTEL_ENABLED"`
 		Endpoint  string `mapstructure:"OTEL_ENDPOINT" validate:"required"`
@@ -83,6 +93,8 @@ func InitializeConfig() (*Config, error) {
 
 	viper.SetDefault("RATE_LIMIT_TOKENS", 60)
 	viper.SetDefault("RATE_LIMIT_INTERVAL", time.Minute)
+	viper.SetDefault("DEFAULT_SLIPPAGE_BPS", 50)
+	viper.SetDefault("MAX_SLIPPAGE_BPS", 5000)
 
 	viper.AutomaticEnv()
 	bindEnvs(reflect.TypeOf(cfg))
@@ -109,7 +121,26 @@ func bindEnvs(t reflect.Type) {
 }
 
 func (c *Config) Validate() error {
-	return metron.ValidateStruct(c)
+	if err := metron.ValidateStruct(c); err != nil {
+		return err
+	}
+	return c.Slippage.validate()
+}
+
+func (s SlippageConfig) validate() error {
+	if s.MaxBps == 0 || s.MaxBps >= basisPointsDenominator {
+		return fmt.Errorf(
+			"MAX_SLIPPAGE_BPS must be between 1 and %d, got %d",
+			basisPointsDenominator-1, s.MaxBps,
+		)
+	}
+	if s.DefaultBps > s.MaxBps {
+		return fmt.Errorf(
+			"DEFAULT_SLIPPAGE_BPS (%d) cannot exceed MAX_SLIPPAGE_BPS (%d)",
+			s.DefaultBps, s.MaxBps,
+		)
+	}
+	return nil
 }
 
 func (c *Config) GetRPC(slug string) string {
