@@ -39,17 +39,23 @@ func (q *quoteHandler) resolveSlippageBps(req *uatu.QuoteRequest) (uint, error) 
 	}
 	if *req.SlippageBps > q.cfg.Slippage.MaxBps {
 		return 0, fmt.Errorf(
-			"slippageBps must not exceed %d", q.cfg.Slippage.MaxBps,
+			"slippage must not exceed %d bps (%s)",
+			q.cfg.Slippage.MaxBps, bpsPercent(q.cfg.Slippage.MaxBps),
 		)
 	}
 	return *req.SlippageBps, nil
 }
 
-func amountString(amount *big.Int) string {
-	if amount == nil {
-		return "0"
+func bpsPercent(bps uint) string {
+	whole, frac := bps/100, bps%100
+	switch {
+	case frac == 0:
+		return fmt.Sprintf("%d%%", whole)
+	case frac%10 == 0:
+		return fmt.Sprintf("%d.%d%%", whole, frac/10)
+	default:
+		return fmt.Sprintf("%d.%02d%%", whole, frac)
 	}
-	return amount.String()
 }
 
 func Deadline() *big.Int {
@@ -283,7 +289,7 @@ func (q *quoteHandler) GetQuotes(
 		quotes = append(quotes, uatu.RouteQuote{
 			AmountIn:         response.AmountIn.String(),
 			AmountOut:        response.AmountOut.String(),
-			AmountOutMinimum: amountString(response.AmountOutMinimum),
+			AmountOutMinimum: response.AmountOutMinimum.String(),
 			SlippageBps:      slippageBps,
 			Deadline:         deadline,
 			TokenIn:          tokenIn,
@@ -375,7 +381,7 @@ func (q *quoteHandler) newQuote(
 		QuoteID:            quoteID,
 		AmountIn:           res.AmountIn.String(),
 		AmountOut:          res.AmountOut.String(),
-		AmountOutMinimum:   amountString(res.AmountOutMinimum),
+		AmountOutMinimum:   res.AmountOutMinimum.String(),
 		SlippageBps:        slippageBps,
 		AmountInFloat:      decimal.NewFromFloat(0),
 		AmountOutFloat:     decimal.NewFromFloat(0),
