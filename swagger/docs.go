@@ -235,7 +235,7 @@ const docTemplate = `{
         },
         "/quotes": {
             "post": {
-                "description": "Resolves the pools for a token pair on the given chain, prices the swap against\neach DEX's on-chain contracts concurrently, and returns the best output together\nwith the encoded Permit2 approval and swap calldata needed to execute it.\nQuotes carry a 1-minute deadline and are persisted with a pending status.",
+                "description": "Resolves the pools for a token pair on the given chain, prices the swap against\neach DEX's on-chain contracts concurrently, and returns the best output together\nwith the encoded Permit2 approval and swap calldata needed to execute it.\nThe swap calldata is guarded by amountOutMinimum, the quoted output reduced by\nrequest's slippageBps (the server default when omitted), so a fill below it reverts.\nQuotes carry a 1-minute deadline and are persisted with a pending status.",
                 "consumes": [
                     "application/json"
                 ],
@@ -293,7 +293,7 @@ const docTemplate = `{
         },
         "/quotes/routes": {
             "post": {
-                "description": "Prices a swap against every supported DEX and returns the valid routes ordered by output amount.",
+                "description": "Prices a swap against every supported DEX and returns the valid routes ordered by output amount.\nEach route reports amountOutMinimum, the quoted output reduced by the request's\n(the server default when omitted), which is the floor the swap would be executed against.",
                 "consumes": [
                     "application/json"
                 ],
@@ -576,6 +576,9 @@ const docTemplate = `{
                 "amountOutFloat": {
                     "type": "string"
                 },
+                "amountOutMinimum": {
+                    "type": "string"
+                },
                 "createdAt": {
                     "type": "string"
                 },
@@ -611,6 +614,9 @@ const docTemplate = `{
                 },
                 "route": {
                     "$ref": "#/definitions/uatu.Route"
+                },
+                "slippageBps": {
+                    "type": "integer"
                 },
                 "status": {
                     "type": "string",
@@ -663,6 +669,9 @@ const docTemplate = `{
                 "recipientAddress": {
                     "type": "string"
                 },
+                "slippageBps": {
+                    "type": "integer"
+                },
                 "tokenIn": {
                     "type": "string"
                 },
@@ -698,11 +707,17 @@ const docTemplate = `{
                 "amountOut": {
                     "type": "string"
                 },
+                "amountOutMinimum": {
+                    "type": "string"
+                },
                 "deadline": {
                     "type": "integer"
                 },
                 "route": {
                     "$ref": "#/definitions/uatu.Route"
+                },
+                "slippageBps": {
+                    "type": "integer"
                 },
                 "tokenIn": {
                     "$ref": "#/definitions/uatu.Token"
