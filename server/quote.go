@@ -41,11 +41,11 @@ func Deadline() *big.Int {
 // CreateQuote prices a swap across every known pool for the pair and returns
 // the best route.
 //
-// @Summary Create a swap quote
+// @Summary Create a Swap Quote
 // @Description Resolves the pools for a token pair on the given chain, prices the swap against
 // @Description each DEX's on-chain contracts concurrently, and returns the best output together
 // @Description with the encoded Permit2 approval and swap calldata needed to execute it.
-// @Description Quotes carry a 5-minute deadline and are persisted with a pending status.
+// @Description Quotes carry a 1-minute deadline and are persisted with a pending status.
 // @Tags quotes
 // @Accept json
 // @Produce json
@@ -151,7 +151,7 @@ func (q *quoteHandler) CreateQuote(
 
 // GetQuotes returns one non-persisted quote option for each supported DEX.
 //
-// @Summary List DEX quote options
+// @Summary Compare DEX Routes
 // @Description Prices a swap against every supported DEX and returns the valid routes ordered by output amount.
 // @Tags quotes
 // @Accept json

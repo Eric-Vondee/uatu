@@ -17,7 +17,7 @@ type chainHandler struct {
 
 // GetBlockchains lists every chain in the catalogue.
 //
-// @Summary List supported blockchains
+// @Summary Get All Blockchains
 // @Description Returns every chain the catalogue knows about, each with its embedded
 // @Description token and DEX definitions.
 // @Tags catalogue
@@ -44,7 +44,7 @@ func (c *chainHandler) GetBlockchains(
 
 // GetTokens lists known tokens, optionally narrowed to one chain.
 //
-// @Summary List tokens
+// @Summary Get All Tokens
 // @Description Returns the known tokens. Omit chainId to list tokens across every chain.
 // @Tags catalogue
 // @Produce json
@@ -84,7 +84,7 @@ func (c *chainHandler) GetTokens(
 
 // GetPools lists the liquidity pools discovered for a chain.
 //
-// @Summary List pools for a chain
+// @Summary Get Pools for a Chain
 // @Description Returns the liquidity pools discovered by the seeder for the given chain,
 // @Description optionally filtered to a single DEX. Unlike the token endpoint, chainId
 // @Description is required here.
@@ -124,7 +124,7 @@ func (c *chainHandler) GetPools(
 
 // GetDex returns one DEX's contract addresses on a chain.
 //
-// @Summary Get a DEX on a chain
+// @Summary Get a DEX
 // @Description Returns the DEX seeded under the given slug on the given chain, including
 // @Description the router, factory, quoter and settlement addresses used to price and
 // @Description encode a swap. Both chainId and slug are required, as a slug identifies a
