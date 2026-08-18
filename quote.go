@@ -37,6 +37,7 @@ type QuoteRequest struct {
 	RecipientAddress string          `json:"recipientAddress" validate:"required"`
 	TokenIn          string          `json:"tokenIn" validate:"required"`
 	TokenOut         string          `json:"tokenOut" validate:"required"`
+	SlippageBps      *uint           `json:"slippageBps,omitempty"`
 	GenericRequest
 }
 
@@ -46,12 +47,14 @@ type QuoteResponse struct {
 
 // RouteQuote is a non-persisted quote option for a direct DEX route.
 type RouteQuote struct {
-	AmountIn  string   `json:"amountIn"`
-	AmountOut string   `json:"amountOut"`
-	Deadline  *big.Int `json:"deadline" swaggertype:"integer"`
-	TokenIn   Token    `json:"tokenIn"`
-	TokenOut  Token    `json:"tokenOut"`
-	Route     Route    `json:"route"`
+	AmountIn         string   `json:"amountIn"`
+	AmountOut        string   `json:"amountOut"`
+	AmountOutMinimum string   `json:"amountOutMinimum"`
+	SlippageBps      uint     `json:"slippageBps"`
+	Deadline         *big.Int `json:"deadline" swaggertype:"integer"`
+	TokenIn          Token    `json:"tokenIn"`
+	TokenOut         Token    `json:"tokenOut"`
+	Route            Route    `json:"route"`
 }
 
 type Quote struct {
@@ -59,6 +62,8 @@ type Quote struct {
 	QuoteID            string            `bun:"quote_id,notnull,unique" json:"quoteId"`
 	AmountIn           string            `bun:"amount_in,notnull,type:numeric(78,0)" json:"amountIn"`
 	AmountOut          string            `bun:"amount_out,notnull,type:numeric(78,0)" json:"amountOut"`
+	AmountOutMinimum   string            `bun:"amount_out_minimum,notnull,type:numeric(78,0)" json:"amountOutMinimum"`
+	SlippageBps        uint              `bun:"slippage_bps,notnull" json:"slippageBps"`
 	AmountInFloat      decimal.Decimal   `bun:"amount_in_float" json:"amountInFloat" swaggertype:"string"`
 	AmountOutFloat     decimal.Decimal   `bun:"amount_out_float" json:"amountOutFloat" swaggertype:"string"`
 	OriginChain        string            `bun:"origin_chain,notnull" json:"originChain"`

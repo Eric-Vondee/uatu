@@ -33,6 +33,25 @@ func newQuoteID() string {
 	return id.String()
 }
 
+func (q *quoteHandler) resolveSlippageBps(req *uatu.QuoteRequest) (uint, error) {
+	if req.SlippageBps == nil {
+		return q.cfg.Slippage.DefaultBps, nil
+	}
+	if *req.SlippageBps > q.cfg.Slippage.MaxBps {
+		return 0, fmt.Errorf(
+			"slippageBps must not exceed %d", q.cfg.Slippage.MaxBps,
+		)
+	}
+	return *req.SlippageBps, nil
+}
+
+func amountString(amount *big.Int) string {
+	if amount == nil {
+		return "0"
+	}
+	return amount.String()
+}
+
 func Deadline() *big.Int {
 	quoteTTL := time.Minute
 	return big.NewInt(time.Now().Add(quoteTTL).Unix())
@@ -45,6 +64,8 @@ func Deadline() *big.Int {
 // @Description Resolves the pools for a token pair on the given chain, prices the swap against
 // @Description each DEX's on-chain contracts concurrently, and returns the best output together
 // @Description with the encoded Permit2 approval and swap calldata needed to execute it.
+// @Description The swap calldata is guarded by amountOutMinimum, the quoted output reduced by
+// @Description request's slippageBps (the server default when omitted), so a fill below it reverts.
 // @Description Quotes carry a 1-minute deadline and are persisted with a pending status.
 // @Tags quotes
 // @Accept json
@@ -67,6 +88,13 @@ func (q *quoteHandler) CreateQuote(
 		return nil, err
 	}
 	if err := metron.ValidateStruct(req); err != nil {
+		return APIError{
+			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
+		}, err
+	}
+
+	slippageBps, err := q.resolveSlippageBps(req)
+	if err != nil {
 		return APIError{
 			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
 		}, err
@@ -129,6 +157,7 @@ func (q *quoteHandler) CreateQuote(
 		Pools:              pools,
 		RPCURL:             q.cfg.GetRPC(chain.Slug),
 		PriceCache:         q.priceCache,
+		SlippageBps:        slippageBps,
 	})
 	if err != nil {
 		logger.Error("Failed to get best route", zap.Error(err))
@@ -137,7 +166,7 @@ func (q *quoteHandler) CreateQuote(
 		}, err
 	}
 
-	quoteResponse, err := q.newQuote(ctx, res, chain, tokenIn, tokenOut, walletAddress)
+	quoteResponse, err := q.newQuote(ctx, res, chain, tokenIn, tokenOut, walletAddress, slippageBps)
 	if err != nil {
 		logger.Error("Failed to build quote", zap.Error(err))
 		return newAPIResponse(
@@ -153,6 +182,8 @@ func (q *quoteHandler) CreateQuote(
 //
 // @Summary Compare DEX Routes
 // @Description Prices a swap against every supported DEX and returns the valid routes ordered by output amount.
+// @Description Each route reports amountOutMinimum, the quoted output reduced by the request's
+// @Description (the server default when omitted), which is the floor the swap would be executed against.
 // @Tags quotes
 // @Accept json
 // @Produce json
@@ -173,6 +204,13 @@ func (q *quoteHandler) GetQuotes(
 		return nil, err
 	}
 	if err := metron.ValidateStruct(req); err != nil {
+		return APIError{
+			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
+		}, err
+	}
+
+	slippageBps, err := q.resolveSlippageBps(req)
+	if err != nil {
 		return APIError{
 			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
 		}, err
@@ -230,6 +268,7 @@ func (q *quoteHandler) GetQuotes(
 		Pools:              pools,
 		RPCURL:             q.cfg.GetRPC(chain.Slug),
 		PriceCache:         q.priceCache,
+		SlippageBps:        slippageBps,
 	})
 	if err != nil {
 		logger.Error("Failed to get DEX quotes", zap.Error(err))
@@ -242,12 +281,14 @@ func (q *quoteHandler) GetQuotes(
 	deadline := Deadline()
 	for _, response := range responses {
 		quotes = append(quotes, uatu.RouteQuote{
-			AmountIn:  response.AmountIn.String(),
-			AmountOut: response.AmountOut.String(),
-			Deadline:  deadline,
-			TokenIn:   tokenIn,
-			TokenOut:  tokenOut,
-			Route:     response.Route,
+			AmountIn:         response.AmountIn.String(),
+			AmountOut:        response.AmountOut.String(),
+			AmountOutMinimum: amountString(response.AmountOutMinimum),
+			SlippageBps:      slippageBps,
+			Deadline:         deadline,
+			TokenIn:          tokenIn,
+			TokenOut:         tokenOut,
+			Route:            response.Route,
 		})
 	}
 
@@ -290,6 +331,7 @@ func (q *quoteHandler) newQuote(
 	chain uatu.Chain,
 	tokenIn, tokenOut uatu.Token,
 	walletAddress common.Address,
+	slippageBps uint,
 ) (*uatu.QuoteResponse, error) {
 	quoteID := newQuoteID()
 	deadline := Deadline()
@@ -333,6 +375,8 @@ func (q *quoteHandler) newQuote(
 		QuoteID:            quoteID,
 		AmountIn:           res.AmountIn.String(),
 		AmountOut:          res.AmountOut.String(),
+		AmountOutMinimum:   amountString(res.AmountOutMinimum),
+		SlippageBps:        slippageBps,
 		AmountInFloat:      decimal.NewFromFloat(0),
 		AmountOutFloat:     decimal.NewFromFloat(0),
 		OriginChainId:      chain.ChainID,
