@@ -24,7 +24,7 @@ const docTemplate = `{
                 "tags": [
                     "catalogue"
                 ],
-                "summary": "List supported blockchains",
+                "summary": "Get All Blockchains",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -65,7 +65,7 @@ const docTemplate = `{
                 "tags": [
                     "catalogue"
                 ],
-                "summary": "Get a DEX on a chain",
+                "summary": "Get a DEX",
                 "parameters": [
                     {
                         "type": "integer",
@@ -125,7 +125,7 @@ const docTemplate = `{
                 "tags": [
                     "catalogue"
                 ],
-                "summary": "List pools for a chain",
+                "summary": "Get Pools for a Chain",
                 "parameters": [
                     {
                         "type": "integer",
@@ -187,7 +187,7 @@ const docTemplate = `{
                 "tags": [
                     "catalogue"
                 ],
-                "summary": "List tokens",
+                "summary": "Get All Tokens",
                 "parameters": [
                     {
                         "type": "integer",
@@ -235,7 +235,7 @@ const docTemplate = `{
         },
         "/quotes": {
             "post": {
-                "description": "Resolves the pools for a token pair on the given chain, prices the swap against\neach DEX's on-chain contracts concurrently, and returns the best output together\nwith the encoded Permit2 approval and swap calldata needed to execute it.\nQuotes carry a 5-minute deadline and are persisted with a pending status.",
+                "description": "Resolves the pools for a token pair on the given chain, prices the swap against\neach DEX's on-chain contracts concurrently, and returns the best output together\nwith the encoded Permit2 approval and swap calldata needed to execute it.\nQuotes carry a 1-minute deadline and are persisted with a pending status.",
                 "consumes": [
                     "application/json"
                 ],
@@ -245,7 +245,7 @@ const docTemplate = `{
                 "tags": [
                     "quotes"
                 ],
-                "summary": "Create a swap quote",
+                "summary": "Create a Swap Quote",
                 "parameters": [
                     {
                         "description": "request body to create a swap quote",
@@ -303,7 +303,7 @@ const docTemplate = `{
                 "tags": [
                     "quotes"
                 ],
-                "summary": "List DEX quote options",
+                "summary": "Compare DEX Routes",
                 "parameters": [
                     {
                         "description": "request body to compare DEX quotes",
@@ -391,6 +391,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "to": {
+                    "type": "string"
+                },
+                "value": {
                     "type": "string"
                 }
             }
@@ -720,9 +723,6 @@ const docTemplate = `{
                 },
                 "decimals": {
                     "type": "integer"
-                },
-                "isStableCoin": {
-                    "type": "boolean"
                 },
                 "logo": {
                     "type": "string"

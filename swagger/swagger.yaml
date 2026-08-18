@@ -26,6 +26,8 @@ definitions:
         type: string
       to:
         type: string
+      value:
+        type: string
     type: object
   uatu.Chain:
     properties:
@@ -244,8 +246,6 @@ definitions:
         type: integer
       decimals:
         type: integer
-      isStableCoin:
-        type: boolean
       logo:
         type: string
       name:
@@ -287,7 +287,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/server.APIResponse'
-      summary: List supported blockchains
+      summary: Get All Blockchains
       tags:
       - catalogue
   /blockchains/dex:
@@ -328,7 +328,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/server.APIResponse'
-      summary: Get a DEX on a chain
+      summary: Get a DEX
       tags:
       - catalogue
   /blockchains/pools:
@@ -369,7 +369,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/server.APIResponse'
-      summary: List pools for a chain
+      summary: Get Pools for a Chain
       tags:
       - catalogue
   /blockchains/tokens:
@@ -403,7 +403,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/server.APIResponse'
-      summary: List tokens
+      summary: Get All Tokens
       tags:
       - catalogue
   /quotes:
@@ -414,7 +414,7 @@ paths:
         Resolves the pools for a token pair on the given chain, prices the swap against
         each DEX's on-chain contracts concurrently, and returns the best output together
         with the encoded Permit2 approval and swap calldata needed to execute it.
-        Quotes carry a 5-minute deadline and are persisted with a pending status.
+        Quotes carry a 1-minute deadline and are persisted with a pending status.
       parameters:
       - description: request body to create a swap quote
         in: body
@@ -442,7 +442,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/server.APIResponse'
-      summary: Create a swap quote
+      summary: Create a Swap Quote
       tags:
       - quotes
   /quotes/routes:
@@ -480,7 +480,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/server.APIResponse'
-      summary: List DEX quote options
+      summary: Compare DEX Routes
       tags:
       - quotes
 schemes:
