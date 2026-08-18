@@ -107,10 +107,28 @@ func lookupPools(client *dex.Client, chain uatu.Chain, j poolJob) []uatu.Pool {
 		factoryAddress := uatu.FormatEvmAddress(j.d.V2FactoryAddress)
 		tokenIn := uatu.FormatEvmAddress(j.tokenIn.Address)
 		tokenOut := uatu.FormatEvmAddress(j.tokenOut.Address)
-		pair, err := client.GetV2Pair(factoryAddress, tokenIn, tokenOut)
+		var (
+			pairs []common.Address
+			err   error
+		)
+		switch j.d.Slug {
+		case "pharoah":
+			var found []dex.PharoahPair
+			found, err = client.GetPharoahV2Pair(factoryAddress, tokenIn, tokenOut)
+			for _, p := range found {
+				pairs = append(pairs, p.PairAddress)
+			}
+		default:
+			var pair common.Address
+			pair, err = client.GetV2Pair(factoryAddress, tokenIn, tokenOut)
+			if pair != (common.Address{}) {
+				pairs = append(pairs, pair)
+			}
+		}
 		if err != nil {
 			log.Printf("%s %s: v2 pair %s/%s: %v", chain.Slug, j.d.Slug, j.tokenIn.Symbol, j.tokenOut.Symbol, err)
-		} else if pair != (common.Address{}) {
+		}
+		for _, pair := range pairs {
 			pool := newPool(chain, j.d, j.tokenIn, j.tokenOut, pair.Hex(), "v2", 300, 0)
 			pools = append(pools, pool)
 		}
@@ -124,7 +142,7 @@ func lookupPools(client *dex.Client, chain uatu.Chain, j poolJob) []uatu.Pool {
 			err   error
 		)
 		switch j.d.Slug {
-		case "agni", "uniswap", "pancakeswap", "oku":
+		case "agni", "uniswap", "pancakeswap", "oku", "sushiswap":
 			var found []dex.V3Pair
 			found, err = client.GetV3Pair(factoryAddress, tokenIn, tokenOut)
 			for _, p := range found {
@@ -139,6 +157,16 @@ func lookupPools(client *dex.Client, chain uatu.Chain, j poolJob) []uatu.Pool {
 		case "aerodrome":
 			var found []dex.AerodromePair
 			found, err = client.GetAerodromePair(factoryAddress, tokenIn, tokenOut)
+			for _, p := range found {
+				pairs = append(pairs, clPair{
+					address:     p.PairAddress,
+					fee:         p.Fee,
+					tickSpacing: p.TickSpacing,
+				})
+			}
+		case "pharoah":
+			var found []dex.PharoahV3Pair
+			found, err = client.GetPharoahV3Pair(factoryAddress, tokenIn, tokenOut)
 			for _, p := range found {
 				pairs = append(pairs, clPair{
 					address:     p.PairAddress,
@@ -199,7 +227,7 @@ func newPool(
 func hasSwapDex(c uatu.Chain) bool {
 	for _, d := range c.Dex {
 		switch d.Slug {
-		case "agni", "uniswap", "pancakeswap", "oku":
+		case "agni", "uniswap", "pancakeswap", "oku", "sushiswap":
 			return true
 		}
 	}
