@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/uatu/internal/contracts"
+	"github.com/uatu/internal/contracts/uniswap"
 )
 
 type Client struct {
@@ -84,7 +84,7 @@ func (c *Client) getPermit2TokenAllowance(
 	ctx context.Context,
 	permit2Address, wallet, token, spender common.Address,
 ) (*Permit2Allowance, error) {
-	contract, err := contracts.NewPermit2Caller(permit2Address, c.client)
+	contract, err := uniswap.NewPermit2Caller(permit2Address, c.client)
 	if err != nil {
 		return nil, fmt.Errorf("could not bind permit2: %w", err)
 	}
@@ -105,7 +105,7 @@ func (c *Client) getPermit2TokenAllowance(
 }
 
 func encodePermit2Approval(token, spender common.Address, amount, expiration *big.Int) ([]byte, error) {
-	permit2ABI, err := contracts.Permit2MetaData.GetAbi()
+	permit2ABI, err := uniswap.Permit2MetaData.GetAbi()
 	if err != nil {
 		return nil, fmt.Errorf("could not parse permit2 abi: %w", err)
 	}
