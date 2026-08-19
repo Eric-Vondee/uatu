@@ -145,6 +145,12 @@ var SupportedTokens = []TokenFeed{
 		Slug:              "usdc",
 	},
 	{
+		PriceFeedAddress:  common.HexToAddress("0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6"),
+		PriceFeedProvider: ChainLink,
+		ChainSlug:         "ethereum",
+		Slug:              "usdc.e",
+	},
+	{
 		PriceFeedAddress:  common.HexToAddress("0xb9fB4e65744E4178894f7C61CF80E8a48A5f224a"),
 		PriceFeedProvider: ChainLink,
 		ChainSlug:         "robinhood",
