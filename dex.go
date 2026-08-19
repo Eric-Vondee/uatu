@@ -39,6 +39,7 @@ type IDexRequest struct {
 	WrapNativeInput                               bool
 	UnwrapNativeOutput                            bool
 	PoolType                                      string
+	SlippageBps                                   uint
 }
 
 type Route struct {
@@ -50,7 +51,7 @@ type Route struct {
 }
 
 type IDexResponse struct {
-	AmountIn, AmountOut                                       *big.Int
+	AmountIn, AmountOut, AmountOutMinimum                     *big.Int
 	EncodedData, EncodedERC20Approval, EncodedPermit2Approval []byte
 	NativeValue                                               *big.Int
 	Dex                                                       Dex

@@ -20,3 +20,6 @@ CREATE TABLE IF NOT EXISTS dexes(
 
 
 CREATE INDEX IF NOT EXISTS idx_dexes_chain ON dexes(blockchain_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_dexes_chain_slug_version
+    ON dexes (blockchain_id, slug, version);
+

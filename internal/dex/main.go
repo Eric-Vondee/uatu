@@ -67,6 +67,21 @@ func routeWithFee(route uatu.Route, fee *big.Int) uatu.Route {
 	return route
 }
 
+func applySlippage(amount *big.Int, slippageBps uint) *big.Int {
+	if amount == nil {
+		return nil
+	}
+	if slippageBps == 0 {
+		return new(big.Int).Set(amount)
+	}
+	if slippageBps >= basisPointsDenominator {
+		return big.NewInt(0)
+	}
+	keep := big.NewInt(int64(basisPointsDenominator - slippageBps))
+	minOut := new(big.Int).Mul(amount, keep)
+	return minOut.Div(minOut, big.NewInt(basisPointsDenominator))
+}
+
 func poolFeeAmount(amountIn, poolFee *big.Int) *big.Int {
 	return new(big.Int).Div(
 		new(big.Int).Mul(amountIn, poolFee),
@@ -87,6 +102,10 @@ type BestQuoteParams struct {
 	Pools              []uatu.Pool
 	RPCURL             string
 	PriceCache         *redisstore.RedisService
+	// SlippageBps is the caller's slippage tolerance in basis points. The
+	// handler resolves it from the request or the configured default, so it is
+	// always set by the time it reaches here.
+	SlippageBps uint
 }
 
 func WrappedNativeToken(chain uatu.Chain, token uatu.Token) (uatu.Token, bool, error) {
@@ -226,6 +245,7 @@ func GetDexQuotes(
 				WrapNativeInput:    params.WrapNativeInput,
 				UnwrapNativeOutput: params.UnwrapNativeOutput,
 				PoolType:           poolType,
+				SlippageBps:        params.SlippageBps,
 			}
 			var (
 				output *uatu.IDexResponse

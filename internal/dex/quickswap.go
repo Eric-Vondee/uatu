@@ -116,10 +116,11 @@ func (c *Client) quickSwapV2(ctx context.Context, d uatu.IDexRequest) (*uatu.IDe
 	if err != nil {
 		return nil, err
 	}
+	amountOutMin := applySlippage(amountOut, d.SlippageBps)
 
 	swapCalldata, err := encodeQuickSwapV2Path(
 		d.WalletAddress,
-		d.AmountIn, amountOut, deadline,
+		d.AmountIn, amountOutMin, deadline,
 		tokenIn, d.TokenOut,
 		d.UnwrapNativeOutput,
 	)
@@ -129,6 +130,7 @@ func (c *Client) quickSwapV2(ctx context.Context, d uatu.IDexRequest) (*uatu.IDe
 	return &uatu.IDexResponse{
 		AmountIn:             d.AmountIn,
 		AmountOut:            amountOut,
+		AmountOutMinimum:     amountOutMin,
 		EncodedData:          swapCalldata,
 		EncodedERC20Approval: enodedERC20TokenApproval,
 		Dex:                  d.Dex,
@@ -172,13 +174,14 @@ func (c *Client) quickSwapV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDe
 	if err != nil {
 		return nil, err
 	}
+	amountOutMin := applySlippage(amountOut, d.SlippageBps)
 	recipient := d.WalletAddress
 	if d.UnwrapNativeOutput {
 		recipient = routerAddress
 	}
 	swapCallData, err := encodeQuickSwapExactInputSingle(
 		recipient,
-		d.AmountIn, amountOut, deadline,
+		d.AmountIn, amountOutMin, deadline,
 		tokenIn, d.TokenOut,
 	)
 	if err != nil {
@@ -189,7 +192,7 @@ func (c *Client) quickSwapV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDe
 		if err != nil {
 			return nil, fmt.Errorf("could not parse QuickSwap V3 router ABI: %w", err)
 		}
-		unwrapCallData, err := routerABI.Pack("unwrapWNativeToken", amountOut, d.WalletAddress)
+		unwrapCallData, err := routerABI.Pack("unwrapWNativeToken", amountOutMin, d.WalletAddress)
 		if err != nil {
 			return nil, fmt.Errorf("could not encode wrapped-native unwrap calldata: %w", err)
 		}
@@ -201,6 +204,7 @@ func (c *Client) quickSwapV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDe
 	return &uatu.IDexResponse{
 		AmountIn:             d.AmountIn,
 		AmountOut:            amountOut,
+		AmountOutMinimum:     amountOutMin,
 		EncodedData:          swapCallData,
 		EncodedERC20Approval: encodedERC20TokenApproval,
 		Dex:                  d.Dex,
