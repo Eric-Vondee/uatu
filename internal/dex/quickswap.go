@@ -87,7 +87,7 @@ func (c *Client) quickSwapV2(ctx context.Context, d uatu.IDexRequest) (*uatu.IDe
 	if err != nil {
 		return nil, err
 	}
-	deadline := big.NewInt(time.Now().Add(swapDeadline).Unix())
+	deadline := big.NewInt(time.Now().Add(SwapDeadline).Unix())
 	var enodedERC20TokenApproval []byte
 
 	if erc20Allowance.Cmp(d.AmountIn) <= 0 {
@@ -153,7 +153,7 @@ func (c *Client) quickSwapV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDe
 	if err != nil {
 		return nil, err
 	}
-	deadline := big.NewInt(time.Now().Add(swapDeadline).Unix())
+	deadline := big.NewInt(time.Now().Add(SwapDeadline).Unix())
 
 	var encodedERC20TokenApproval []byte
 	if erc20Allowance.Cmp(d.AmountIn) <= 0 {

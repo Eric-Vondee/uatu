@@ -168,7 +168,7 @@ func (c *Client) Aerodrome(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexR
 	if err != nil {
 		return nil, err
 	}
-	deadline := big.NewInt(time.Now().Add(swapDeadline).Unix())
+	deadline := big.NewInt(time.Now().Add(SwapDeadline).Unix())
 
 	var enodedERC20TokenApproval []byte
 	if erc20Allowance.Cmp(d.AmountIn) <= 0 {

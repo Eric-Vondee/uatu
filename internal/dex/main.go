@@ -18,6 +18,8 @@ import (
 )
 
 const (
+	SwapDeadline = 5 * time.Minute
+
 	basisPointsDenominator = 10000
 	poolFeeDenominator     = 1_000_000
 	minOracleOutputBps     = 9800

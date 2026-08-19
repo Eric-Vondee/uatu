@@ -128,7 +128,7 @@ func (c *Client) Agni(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespon
 		pool.Fee,
 		tokenIn,
 		d.TokenOut,
-		big.NewInt(time.Now().Add(swapDeadline).Unix()),
+		big.NewInt(time.Now().Add(SwapDeadline).Unix()),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not encode Agni exactInputSingle calldata: %w", err)

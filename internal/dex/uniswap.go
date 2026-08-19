@@ -205,10 +205,7 @@ func (c *Client) getV3AmountOut(
 	return amountOut, nil
 }
 
-const (
-	swapDeadline            = 20 * time.Minute
-	permit2ApprovalDuration = 30 * 24 * time.Hour
-)
+const permit2ApprovalDuration = 24 * time.Hour
 
 // maxUint160 is permit2's unlimited allowance amount (uint160 max).
 var maxUint160 = new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 160), big.NewInt(1))
@@ -357,7 +354,7 @@ func (c *Client) swapV2UniversalRouter(ctx context.Context, d uatu.IDexRequest) 
 	universalRouterAddress := uatu.FormatEvmAddress(d.Dex.UniversalRouterAddress)
 	tokenIn := d.TokenIn
 	now := big.NewInt(time.Now().Unix())
-	deadline := big.NewInt(time.Now().Add(swapDeadline).Unix())
+	deadline := big.NewInt(time.Now().Add(SwapDeadline).Unix())
 	var encodedPermit2Approval, enodedERC20TokenApproval []byte
 
 	if !d.WrapNativeInput {
@@ -514,7 +511,7 @@ func (c *Client) swapV3UniversalRouter(ctx context.Context, d uatu.IDexRequest) 
 	permit2Address := uatu.FormatEvmAddress(d.Dex.Permit2Address)
 	quoterAddress := uatu.FormatEvmAddress(d.Dex.V3QuoterAddress)
 	now := big.NewInt(time.Now().Unix())
-	deadline := big.NewInt(time.Now().Add(swapDeadline).Unix())
+	deadline := big.NewInt(time.Now().Add(SwapDeadline).Unix())
 	var encodedPermit2Approval, enodedERC20TokenApproval []byte
 
 	if !d.WrapNativeInput {

@@ -57,7 +57,7 @@ const (
 	cowMinSlippageBps = 50
 
 	// cowOrderValidity is how long a posted order stays fillable.
-	cowOrderValidity = swapDeadline
+	cowOrderValidity = SwapDeadline
 
 	cowHTTPTimeout      = 15 * time.Second
 	cowMaxResponseBytes = 1 << 20

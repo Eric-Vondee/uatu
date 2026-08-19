@@ -74,7 +74,7 @@ func (c *Client) SushiSwap(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexR
 	amountOutMin := applySlippage(amountOut, d.SlippageBps)
 	calldata, err := encodeSushiSwapV2ExactInput(
 		d.WalletAddress, d.AmountIn, amountOutMin,
-		big.NewInt(time.Now().Add(swapDeadline).Unix()),
+		big.NewInt(time.Now().Add(SwapDeadline).Unix()),
 		d.TokenIn, d.TokenOut, d.WrapNativeInput, d.UnwrapNativeOutput,
 	)
 	if err != nil {

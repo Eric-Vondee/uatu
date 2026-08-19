@@ -203,7 +203,7 @@ func (c *Client) Pharoah(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRes
 	if err != nil {
 		return nil, err
 	}
-	deadline := big.NewInt(time.Now().Add(swapDeadline).Unix())
+	deadline := big.NewInt(time.Now().Add(SwapDeadline).Unix())
 
 	var enodedERC20TokenApproval []byte
 	if erc20Allowance.Cmp(d.AmountIn) <= 0 {

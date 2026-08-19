@@ -59,8 +59,7 @@ func bpsPercent(bps uint) string {
 }
 
 func Deadline() *big.Int {
-	quoteTTL := time.Minute
-	return big.NewInt(time.Now().Add(quoteTTL).Unix())
+	return big.NewInt(time.Now().Add(dex.SwapDeadline).Unix())
 }
 
 // CreateQuote prices a swap across every known pool for the pair and returns
@@ -72,7 +71,7 @@ func Deadline() *big.Int {
 // @Description with the encoded Permit2 approval and swap calldata needed to execute it.
 // @Description The swap calldata is guarded by amountOutMinimum, the quoted output reduced by
 // @Description request's slippageBps (the server default when omitted), so a fill below it reverts.
-// @Description Quotes carry a 1-minute deadline and are persisted with a pending status.
+// @Description Quotes carry a 5-minute deadline and are persisted with a pending status.
 // @Tags quotes
 // @Accept json
 // @Produce json

@@ -232,7 +232,7 @@
         },
         "/quotes": {
             "post": {
-                "description": "Resolves the pools for a token pair on the given chain, prices the swap against\neach DEX's on-chain contracts concurrently, and returns the best output together\nwith the encoded Permit2 approval and swap calldata needed to execute it.\nThe swap calldata is guarded by amountOutMinimum, the quoted output reduced by\nrequest's slippageBps (the server default when omitted), so a fill below it reverts.\nQuotes carry a 1-minute deadline and are persisted with a pending status.",
+                "description": "Resolves the pools for a token pair on the given chain, prices the swap against\neach DEX's on-chain contracts concurrently, and returns the best output together\nwith the encoded Permit2 approval and swap calldata needed to execute it.\nThe swap calldata is guarded by amountOutMinimum, the quoted output reduced by\nrequest's slippageBps (the server default when omitted), so a fill below it reverts.\nQuotes carry a 5-minute deadline and are persisted with a pending status.",
                 "consumes": [
                     "application/json"
                 ],

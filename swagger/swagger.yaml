@@ -426,7 +426,7 @@ paths:
         with the encoded Permit2 approval and swap calldata needed to execute it.
         The swap calldata is guarded by amountOutMinimum, the quoted output reduced by
         request's slippageBps (the server default when omitted), so a fill below it reverts.
-        Quotes carry a 1-minute deadline and are persisted with a pending status.
+        Quotes carry a 5-minute deadline and are persisted with a pending status.
       parameters:
       - description: request body to create a swap quote
         in: body
