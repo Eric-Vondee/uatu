@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	tokenPriceRefreshInterval = 1 * time.Second
+	tokenPriceRefreshInterval = 30 * time.Second
 	tokenPriceCacheTTL        = 2 * time.Minute
-	poolRefreshInterval       = 3 * time.Minute
+	poolRefreshInterval       = 1 * time.Minute
 )
 
 func Startup(
