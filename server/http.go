@@ -37,11 +37,23 @@ func WrapHTTPHandler(
 
 		log := logger.With(zap.String("request_id", requestID))
 
-		resp, _ := handler(ctx, span, log, w, r)
+		resp, handlerErr := handler(ctx, span, log, w, r)
+		if resp == nil {
+			if handlerErr != nil {
+				log.Error("Request handler failed", zap.Error(handlerErr))
+			}
+			resp = APIError{newAPIResponse(
+				http.StatusInternalServerError,
+				"an internal server error occurred",
+				nil,
+			)}
+		} else if handlerErr != nil {
+			log.Debug("Request rejected", zap.Error(handlerErr))
+		}
 
 		err := render.Render(w, r, resp)
 		if err != nil {
-			log.Error(err.Error())
+			log.Error("Failed to render response", zap.Error(err))
 		}
 	}
 }
