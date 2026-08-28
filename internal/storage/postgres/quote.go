@@ -25,7 +25,7 @@ func (q *quoteRepo) Create(ctx context.Context, quote *uatu.Quote) error {
 	if err != nil {
 		return fmt.Errorf("failed to create quote")
 	}
-	return err
+	return nil
 }
 
 func (q *quoteRepo) Get(ctx context.Context, id string) (*uatu.Quote, error) {
