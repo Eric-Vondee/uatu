@@ -47,9 +47,9 @@ type Config struct {
 	Slippage       SlippageConfig  `mapstructure:",squash"`
 	Otel           struct {
 		IsEnabled bool   `mapstructure:"OTEL_ENABLED"`
-		Endpoint  string `mapstructure:"OTEL_ENDPOINT" validate:"required"`
+		Endpoint  string `mapstructure:"OTEL_ENDPOINT"`
 		UseTLS    bool   `mapstructure:"OTEL_USE_TLS"`
-		Headers   string `mapstructure:"OTEL_HEADERS" validate:"required"`
+		Headers   string `mapstructure:"OTEL_HEADERS"`
 	} `mapstructure:",squash"`
 	Database struct {
 		Postgres PostgresConfig `mapstructure:",squash" validate:"required"`
@@ -123,6 +123,9 @@ func bindEnvs(t reflect.Type) {
 func (c *Config) Validate() error {
 	if err := metron.ValidateStruct(c); err != nil {
 		return err
+	}
+	if c.Otel.IsEnabled && strings.TrimSpace(c.Otel.Endpoint) == "" {
+		return fmt.Errorf("OTEL_ENDPOINT is required when OTEL_ENABLED is true")
 	}
 	return c.Slippage.validate()
 }

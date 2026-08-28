@@ -57,7 +57,7 @@ func (c *Client) SushiSwap(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexR
 		}
 	}
 
-	pool, err := c.GetV2Pool(d.PairAddress)
+	pool, err := c.GetV2Pool(ctx, d.PairAddress)
 	if err != nil {
 		return nil, err
 	}

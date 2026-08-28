@@ -20,7 +20,12 @@ func NewRateLimitStore(cfg config.RedisConfig, tokens uint64, interval time.Dura
 		Tokens:   tokens,
 		Interval: interval,
 		Dial: func() (redis.Conn, error) {
-			return redis.DialURL(cfg.DSN)
+			return redis.DialURL(
+				cfg.DSN,
+				redis.DialConnectTimeout(5*time.Second),
+				redis.DialReadTimeout(3*time.Second),
+				redis.DialWriteTimeout(3*time.Second),
+			)
 		},
 	})
 	if err != nil {

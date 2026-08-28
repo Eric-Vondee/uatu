@@ -33,11 +33,21 @@ var erc20ABI = func() abi.ABI {
 }()
 
 func Provider(rpcUrl string) (*Client, error) {
-	client, err := ethclient.Dial(rpcUrl)
+	return ProviderContext(context.Background(), rpcUrl)
+}
+
+func ProviderContext(ctx context.Context, rpcURL string) (*Client, error) {
+	client, err := ethclient.DialContext(ctx, rpcURL)
 	if err != nil {
 		return nil, fmt.Errorf("could not create eth client: %w", err)
 	}
 	return &Client{client: client, cow: newCowClient()}, nil
+}
+
+func (c *Client) Close() {
+	if c != nil && c.client != nil {
+		c.client.Close()
+	}
 }
 
 func (c *Client) getERC20Allowance(

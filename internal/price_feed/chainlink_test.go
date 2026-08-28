@@ -2,8 +2,28 @@ package feeds
 
 import (
 	"math/big"
+	"strings"
 	"testing"
 )
+
+func TestSupportedTokensSlugs(t *testing.T) {
+	seen := make(map[string]int, countSlugs(SupportedTokens))
+
+	for i, token := range SupportedTokens {
+		if len(token.Slugs) == 0 {
+			t.Errorf("SupportedTokens[%d] (%s) has no slugs", i, token.ChainSlug)
+		}
+		for _, slug := range token.Slugs {
+			if slug != strings.ToLower(slug) {
+				t.Errorf("slug %q is not lowercase, cache lookups are case sensitive", slug)
+			}
+			if first, ok := seen[slug]; ok {
+				t.Errorf("slug %q is in SupportedTokens[%d] and [%d], its cache key would be overwritten", slug, first, i)
+			}
+			seen[slug] = i
+		}
+	}
+}
 
 func TestFormatAnswer(t *testing.T) {
 	tests := []struct {

@@ -25,6 +25,8 @@ const (
 	minOracleOutputBps     = 9800
 	maxOracleOutputBps     = 10200
 	maxOraclePriceAge      = 90 * time.Second
+	maxOracleRoundAge      = 48 * time.Hour
+	maxConcurrentQuotes    = 8
 )
 
 var DexRoutes = map[string]uatu.Route{
@@ -182,7 +184,10 @@ func GetDexQuotes(
 	rpcURL := params.RPCURL
 	priceCache := params.PriceCache
 
-	client, err := Provider(rpcURL)
+	client, err := ProviderContext(ctx, rpcURL)
+	if client != nil {
+		defer client.Close()
+	}
 	if err != nil {
 		return nil, fmt.Errorf("could not connect to %s rpc: %w", chain.Slug, err)
 	}
@@ -193,6 +198,9 @@ func GetDexQuotes(
 		d, ok := dexForSlug(chain.Dex, pool.DexName)
 		if !ok {
 			return nil, fmt.Errorf("could not find dex %s on %s", pool.DexName, chain.Slug)
+		}
+		if !routeSupportsNative(d.Slug, params.WrapNativeInput, params.UnwrapNativeOutput) {
+			continue
 		}
 		routes = append(routes, quoteRoute{pool: &pool, dex: d})
 	}
@@ -223,8 +231,16 @@ func GetDexQuotes(
 	tokenOutAddress := uatu.FormatEvmAddress(params.ExecutionTokenOut.Address)
 
 	results := make(chan quoteResult, len(routes))
+	semaphore := make(chan struct{}, maxConcurrentQuotes)
 	for _, route := range routes {
 		go func(route quoteRoute) {
+			select {
+			case semaphore <- struct{}{}:
+				defer func() { <-semaphore }()
+			case <-ctx.Done():
+				results <- quoteResult{dex: route.dex.Name, err: ctx.Err()}
+				return
+			}
 			var (
 				poolFee     uint
 				poolType    string
@@ -320,6 +336,23 @@ func GetDexQuotes(
 		return quotes[i].AmountOut.Cmp(quotes[j].AmountOut) > 0
 	})
 	return quotes, nil
+}
+
+func routeSupportsNative(slug string, wrapInput, unwrapOutput bool) bool {
+	if !wrapInput && !unwrapOutput {
+		return true
+	}
+
+	supportsInput := false
+	supportsOutput := false
+	switch slug {
+	case "uniswap", "pancakeswap", "oku", "sushiswap":
+		supportsInput = true
+		supportsOutput = true
+	case "quickswap", "aerodrome", "pharoah":
+		supportsOutput = true
+	}
+	return (!wrapInput || supportsInput) && (!unwrapOutput || supportsOutput)
 }
 
 func GetBestDexQuote(

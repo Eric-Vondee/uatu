@@ -40,6 +40,11 @@ func SyncPools(
 		chainsByID[chain.ChainID] = chain
 	}
 	clients := make(map[uint]*dex.Client, len(chains))
+	defer func() {
+		for _, client := range clients {
+			client.Close()
+		}
+	}()
 	for _, pool := range pools {
 		if _, exists := clients[pool.ChainID]; exists {
 			continue
@@ -52,7 +57,7 @@ func SyncPools(
 		if rpcURL == "" {
 			return fmt.Errorf("rpc URL is not configured for %s", chain.Slug)
 		}
-		client, err := dex.Provider(rpcURL)
+		client, err := dex.ProviderContext(ctx, rpcURL)
 		if err != nil {
 			return fmt.Errorf("connect to %s RPC: %w", chain.Slug, err)
 		}
@@ -69,7 +74,11 @@ func SyncPools(
 		pool := pools[i]
 		client := clients[pool.ChainID]
 		wg.Go(func() {
-			sem <- struct{}{}
+			select {
+			case sem <- struct{}{}:
+			case <-ctx.Done():
+				return
+			}
 			defer func() { <-sem }()
 
 			if err := syncPool(ctx, client, chainRepo, priceCache, &pool); err != nil {

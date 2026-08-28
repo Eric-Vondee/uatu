@@ -37,6 +37,7 @@ func getChainAssets(chains []uatu.Chain) (
 			continue
 		}
 		pools = append(pools, getPools(client, c)...)
+		client.Close()
 	}
 	return tokens, dexes, pools
 }
@@ -325,7 +326,7 @@ func createPools(ctx context.Context, db *bun.DB, pools []uatu.Pool) error {
 	}
 	_, err := db.NewInsert().
 		Model(&pools).
-		On("CONFLICT (pair_address) DO UPDATE").
+		On("CONFLICT (chain_id, lower(pair_address)) DO UPDATE").
 		Set("name = EXCLUDED.name").
 		Set("dex_name = EXCLUDED.dex_name").
 		Set("symbol = EXCLUDED.symbol").
