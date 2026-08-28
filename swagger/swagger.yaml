@@ -197,8 +197,6 @@ definitions:
     properties:
       amount:
         type: string
-      chain:
-        type: string
       chainId:
         type: integer
       recipientAddress:
@@ -211,7 +209,6 @@ definitions:
         type: string
     required:
     - amount
-    - chain
     - chainId
     - recipientAddress
     - tokenIn
@@ -328,7 +325,9 @@ paths:
             - $ref: '#/definitions/server.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/uatu.Dex'
+                  items:
+                    $ref: '#/definitions/uatu.Dex'
+                  type: array
               type: object
         "400":
           description: Bad Request
@@ -450,8 +449,20 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/server.APIResponse'
+        "413":
+          description: Request Entity Too Large
+          schema:
+            $ref: '#/definitions/server.APIResponse'
+        "415":
+          description: Unsupported Media Type
+          schema:
+            $ref: '#/definitions/server.APIResponse'
         "500":
           description: Internal Server Error
+          schema:
+            $ref: '#/definitions/server.APIResponse'
+        "502":
+          description: Bad Gateway
           schema:
             $ref: '#/definitions/server.APIResponse'
       summary: Create a Swap Quote
@@ -490,8 +501,20 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/server.APIResponse'
+        "413":
+          description: Request Entity Too Large
+          schema:
+            $ref: '#/definitions/server.APIResponse'
+        "415":
+          description: Unsupported Media Type
+          schema:
+            $ref: '#/definitions/server.APIResponse'
         "500":
           description: Internal Server Error
+          schema:
+            $ref: '#/definitions/server.APIResponse'
+        "502":
+          description: Bad Gateway
           schema:
             $ref: '#/definitions/server.APIResponse'
       summary: Compare DEX Routes

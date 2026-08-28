@@ -94,7 +94,10 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/uatu.Dex"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/uatu.Dex"
+                                            }
                                         }
                                     }
                                 }
@@ -282,8 +285,26 @@ const docTemplate = `{
                             "$ref": "#/definitions/server.APIResponse"
                         }
                     },
+                    "413": {
+                        "description": "Request Entity Too Large",
+                        "schema": {
+                            "$ref": "#/definitions/server.APIResponse"
+                        }
+                    },
+                    "415": {
+                        "description": "Unsupported Media Type",
+                        "schema": {
+                            "$ref": "#/definitions/server.APIResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/server.APIResponse"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
                         "schema": {
                             "$ref": "#/definitions/server.APIResponse"
                         }
@@ -343,8 +364,26 @@ const docTemplate = `{
                             "$ref": "#/definitions/server.APIResponse"
                         }
                     },
+                    "413": {
+                        "description": "Request Entity Too Large",
+                        "schema": {
+                            "$ref": "#/definitions/server.APIResponse"
+                        }
+                    },
+                    "415": {
+                        "description": "Unsupported Media Type",
+                        "schema": {
+                            "$ref": "#/definitions/server.APIResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/server.APIResponse"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
                         "schema": {
                             "$ref": "#/definitions/server.APIResponse"
                         }
@@ -650,7 +689,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "amount",
-                "chain",
                 "chainId",
                 "recipientAddress",
                 "tokenIn",
@@ -658,9 +696,6 @@ const docTemplate = `{
             ],
             "properties": {
                 "amount": {
-                    "type": "string"
-                },
-                "chain": {
                     "type": "string"
                 },
                 "chainId": {
