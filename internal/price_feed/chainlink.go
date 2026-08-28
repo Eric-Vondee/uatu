@@ -17,7 +17,8 @@ import (
 const (
 	ChainLink           = "chainlink"
 	PriceCacheKeyPrefix = "chainlink:price:"
-	priceFetchLimit     = 10
+	defaultFeedMaxAge   = 25 * time.Hour
+	futureTimeTolerance = time.Minute
 )
 
 func PriceCacheKey(tokenSlug string) string {
@@ -29,6 +30,7 @@ type TokenFeed struct {
 	PriceFeedProvider string
 	ChainSlug         string
 	Slugs             []string
+	MaxAge            time.Duration
 }
 
 type TokenFeedResponse struct {
@@ -43,6 +45,7 @@ type TokenFeedResponse struct {
 	UpdatedAt     int64  `json:"updatedAt"`
 	FetchedAt     int64  `json:"fetchedAt"`
 	RoundID       string `json:"roundId,omitempty"`
+	MaxAgeSeconds int64  `json:"maxAgeSeconds"`
 	FeedAddress   string `json:"feedAddress,omitempty"`
 	Provider      string `json:"provider"`
 }
@@ -112,14 +115,12 @@ func fetchChainlinkPrice(
 	if err != nil {
 		return TokenFeedResponse{}, fmt.Errorf("latest round data failed for %s: %w", chainSlug, err)
 	}
-	if data.Answer == nil || data.Answer.Sign() <= 0 {
-		return TokenFeedResponse{}, fmt.Errorf("chainlink returned a non-positive answer")
-	}
-	if data.UpdatedAt == nil || data.UpdatedAt.Sign() <= 0 {
-		return TokenFeedResponse{}, fmt.Errorf("chainlink returned an invalid update time")
-	}
-	if data.RoundId == nil || data.RoundId.Sign() <= 0 {
-		return TokenFeedResponse{}, fmt.Errorf("chainlink returned an invalid round id")
+	now := time.Now()
+	maxAge := token.maxAge()
+	if err := validateChainlinkRound(
+		data.RoundId, data.AnsweredInRound, data.Answer, data.UpdatedAt, now, maxAge,
+	); err != nil {
+		return TokenFeedResponse{}, err
 	}
 
 	return TokenFeedResponse{
@@ -127,12 +128,50 @@ func fetchChainlinkPrice(
 		PriceAnswer:   data.Answer.String(),
 		PriceDecimals: decimals,
 		UpdatedAt:     data.UpdatedAt.Int64(),
-		FetchedAt:     time.Now().Unix(),
+		FetchedAt:     now.Unix(),
 		RoundID:       data.RoundId.String(),
+		MaxAgeSeconds: int64(maxAge / time.Second),
 		FeedAddress:   token.PriceFeedAddress.Hex(),
 		ChainSlug:     token.ChainSlug,
 		Provider:      ChainLink,
 	}, nil
+}
+
+func (t TokenFeed) maxAge() time.Duration {
+	if t.MaxAge > 0 {
+		return t.MaxAge
+	}
+	return defaultFeedMaxAge
+}
+
+func validateChainlinkRound(
+	roundID, answeredInRound, answer, updatedAt *big.Int,
+	now time.Time,
+	maxAge time.Duration,
+) error {
+	if answer == nil || answer.Sign() <= 0 {
+		return fmt.Errorf("chainlink returned a non-positive answer")
+	}
+	if roundID == nil || roundID.Sign() <= 0 {
+		return fmt.Errorf("chainlink returned an invalid round id")
+	}
+	if answeredInRound == nil || answeredInRound.Cmp(roundID) < 0 {
+		return fmt.Errorf("chainlink returned an incomplete round")
+	}
+	if updatedAt == nil || updatedAt.Sign() <= 0 || !updatedAt.IsInt64() {
+		return fmt.Errorf("chainlink returned an invalid update time")
+	}
+	if maxAge <= 0 {
+		return fmt.Errorf("chainlink feed max age is invalid")
+	}
+	updated := time.Unix(updatedAt.Int64(), 0)
+	if updated.After(now.Add(futureTimeTolerance)) {
+		return fmt.Errorf("chainlink returned a future update time")
+	}
+	if now.Sub(updated) > maxAge {
+		return fmt.Errorf("chainlink returned a stale round")
+	}
+	return nil
 }
 
 func formatAnswer(answer *big.Int, decimals uint8) string {
