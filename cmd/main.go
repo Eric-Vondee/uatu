@@ -2,7 +2,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/uatu/config"
 	"github.com/uatu/internal/storage/postgres"
@@ -13,57 +18,67 @@ import (
 )
 
 func main() {
+	if err := run(); err != nil {
+		log.Printf("uatu server stopped: %v", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
 	cfg, err := config.InitializeConfig()
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		return fmt.Errorf("load config: %w", err)
 	}
 
 	if err = cfg.Validate(); err != nil {
-		log.Fatalf("Invalid config: %v", err)
+		return fmt.Errorf("validate config: %w", err)
 	}
 
 	logger, err := zap.NewProduction()
 	if err != nil {
-		log.Fatalf("Failed to create logger: %v", err)
+		return fmt.Errorf("create logger: %w", err)
 	}
 	defer func() { _ = logger.Sync() }()
 
-	otelShutdown, err := server.InitOTELCapabilities(context.Background(), *cfg)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	otelShutdown, err := server.InitOTELCapabilities(ctx, *cfg)
 	if err != nil {
-		log.Fatalf("Failed to initialize OpenTelemetry: %v", err)
+		return fmt.Errorf("initialize OpenTelemetry: %w", err)
 	}
 	defer func() {
-		if err := otelShutdown(context.Background()); err != nil {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := otelShutdown(shutdownCtx); err != nil {
 			logger.Error("Failed to shut down OpenTelemetry", zap.Error(err))
 		}
 	}()
 
 	db, err := postgres.DbConnection(*cfg, logger)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		return fmt.Errorf("connect to database: %w", err)
 	}
 	defer func() { _ = db.Close() }()
 
-	redisClient, err := redisstore.InitializeRedis(context.Background(), cfg.Redis)
+	redisClient, err := redisstore.InitializeRedis(ctx, cfg.Redis)
 	if err != nil {
-		log.Fatalf("Failed to connect to Redis: %v", err)
+		return fmt.Errorf("connect to Redis: %w", err)
 	}
 	defer func() { _ = redisClient.Close() }()
 
 	quoteRepo := postgres.NewQuoteRepository(db)
 	chainRepo := postgres.NewChainRepository(db)
 
-	stopJobs, err := jobs.Startup(context.Background(), *cfg, redisClient, chainRepo)
+	stopJobs, err := jobs.Startup(ctx, *cfg, redisClient, chainRepo)
 	if err != nil {
-		log.Fatalf("Failed to start background jobs: %v", err)
+		return fmt.Errorf("start background jobs: %w", err)
 	}
 	defer stopJobs()
 
 	srv, err := server.New(*cfg, logger, quoteRepo, chainRepo, redisClient)
 	if err != nil {
-		log.Fatalf("Failed to create server: %v", err)
+		return fmt.Errorf("create server: %w", err)
 	}
-	if err := srv.Run(); err != nil {
-		log.Fatalf("Server error: %v", err)
-	}
+	return srv.Run(ctx)
 }
