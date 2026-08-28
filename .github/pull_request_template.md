@@ -41,7 +41,8 @@ Closes #
 
 - [ ] `go test ./...` passes locally
 - [ ] `make vet` is clean
-- [ ] `golangci-lint run` is clean (CI runs this on new issues only)
+- [ ] `golangci-lint run` is clean
+- [ ] `govulncheck ./...` reports no reachable vulnerabilities
 - [ ] Exercised against a live chain / RPC — chain(s):
 - [ ] Not runtime-verifiable (docs, config-only) — explain why below
 
