@@ -32,7 +32,6 @@ type Actions struct {
 
 type QuoteRequest struct {
 	Amount           decimal.Decimal `json:"amount" validate:"required" swaggertype:"string"`
-	Chain            string          `json:"chain" validate:"required"`
 	ChainID          uint            `json:"chainId" validate:"required"`
 	RecipientAddress string          `json:"recipientAddress" validate:"required"`
 	TokenIn          string          `json:"tokenIn" validate:"required"`
