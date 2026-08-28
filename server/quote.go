@@ -92,6 +92,11 @@ func (q *quoteHandler) CreateQuote(
 ) (render.Renderer, error) {
 	req := new(uatu.QuoteRequest)
 
+	if err := render.Bind(r, req); err != nil {
+		return APIError{
+			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
+		}, err
+	}
 	if err := metron.ValidateStruct(req); err != nil {
 		return APIError{
 			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
@@ -219,6 +224,12 @@ func (q *quoteHandler) GetQuotes(
 	r *http.Request,
 ) (render.Renderer, error) {
 	req := new(uatu.QuoteRequest)
+
+	if err := render.Bind(r, req); err != nil {
+		return APIError{
+			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
+		}, err
+	}
 	if err := metron.ValidateStruct(req); err != nil {
 		return APIError{
 			newAPIResponse(http.StatusBadRequest, err.Error(), nil),

@@ -19,6 +19,8 @@ import (
 	"go.uber.org/zap"
 )
 
+const maxRequestBodyBytes = 1 << 20 // 1 MiB
+
 type Server struct {
 	cfg        config.Config
 	logger     *zap.Logger
@@ -140,6 +142,9 @@ func (s *Server) quoteRoutes(r chi.Router) {
 		chainRepo:  s.chains,
 		priceCache: s.priceCache,
 	}
+	r.Use(middleware.AllowContentType("application/json"))
+	r.Use(middleware.RequestSize(maxRequestBodyBytes))
+
 	r.Post("/", WrapHTTPHandler(s.logger, quote.CreateQuote, s.cfg, "CreateQuote"))
 	r.Post("/routes", WrapHTTPHandler(s.logger, quote.GetQuotes, s.cfg, "GetQuotes"))
 }
