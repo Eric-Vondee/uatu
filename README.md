@@ -39,7 +39,7 @@ Domain models (`Chain`, `Token`, `Dex`, `Pool`, `Quote`) live in the root
 
 ## Requirements
 
-- Go 1.26+
+- Go 1.26.7+
 - PostgreSQL
 - Redis
 - An RPC endpoint per chain you intend to support
@@ -56,11 +56,12 @@ systemd unit using `EnvironmentFile=` — no file needs to exist on disk.
 | Variable                                        | Purpose                                               |
 | ----------------------------------------------- | ----------------------------------------------------- |
 | `PORT`                                          | HTTP listen port                                      |
+| `ALLOWED_ORIGINS`                               | CORS origin allowlist                                 |
 | `POSTGRES_DSN`                                  | Postgres connection string                            |
 | `REDIS_DSN`                                     | Redis connection URL, e.g. `redis://localhost:6379/`  |
 | `<CHAIN>_RPC_URL`                               | RPC endpoint per chain (e.g. `ETHEREUM_RPC_URL`)      |
 | `OTEL_ENABLED`                                  | Toggle OpenTelemetry export                           |
-| `OTEL_ENDPOINT`, `OTEL_USE_TLS`, `OTEL_HEADERS` | OTLP exporter settings                                |
+| `OTEL_ENDPOINT`, `OTEL_USE_TLS`, `OTEL_HEADERS` | OTLP settings (endpoint required only when enabled)   |
 | `DEFAULT_SLIPPAGE_BPS`                          | Slippage applied when a quote omits it (default 50)   |
 | `MAX_SLIPPAGE_BPS`                              | Largest slippage a quote may request (default 5000)   |
 | `RATE_LIMIT_TOKENS`                             | Requests allowed per client per interval (default 60) |
@@ -131,6 +132,7 @@ sync job rather than the seeder, so re-seeding leaves those figures alone.
 ## API
 
 Swagger UI is served at `/swagger/` and the raw spec at `/swagger/doc.json`.
+Quote endpoints accept only `application/json`
 
 Regenerate the spec after changing any handler annotation:
 
