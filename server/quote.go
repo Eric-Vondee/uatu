@@ -78,7 +78,10 @@ func Deadline() *big.Int {
 // @Param message body uatu.QuoteRequest true "request body to create a swap quote"
 // @Success 200 {object} APIResponse{data=uatu.Quote}
 // @Failure 400 {object} APIResponse
+// @Failure 413 {object} APIResponse
+// @Failure 415 {object} APIResponse
 // @Failure 500 {object} APIResponse
+// @Failure 502 {object} APIResponse
 // @Router /quotes [post]
 func (q *quoteHandler) CreateQuote(
 	ctx context.Context,
@@ -89,9 +92,6 @@ func (q *quoteHandler) CreateQuote(
 ) (render.Renderer, error) {
 	req := new(uatu.QuoteRequest)
 
-	if err := render.Bind(r, req); err != nil {
-		return nil, err
-	}
 	if err := metron.ValidateStruct(req); err != nil {
 		return APIError{
 			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
@@ -103,6 +103,14 @@ func (q *quoteHandler) CreateQuote(
 		return APIError{
 			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
 		}, err
+	}
+	if !req.Amount.GreaterThan(decimal.Zero) {
+		err := fmt.Errorf("amount must be greater than zero")
+		return APIError{newAPIResponse(http.StatusBadRequest, err.Error(), nil)}, err
+	}
+	walletAddress, err := parseRecipientAddress(req.RecipientAddress)
+	if err != nil {
+		return APIError{newAPIResponse(http.StatusBadRequest, err.Error(), nil)}, err
 	}
 
 	chain, err := q.chainRepo.GetBlockchain(ctx, uatu.QueryOptions{
@@ -120,6 +128,10 @@ func (q *quoteHandler) CreateQuote(
 		return APIError{
 			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
 		}, err
+	}
+	amountIn, err := ConvertDecimalToBigInt(req.Amount, tokenIn.Decimals)
+	if err != nil {
+		return APIError{newAPIResponse(http.StatusBadRequest, err.Error(), nil)}, err
 	}
 	executionTokenIn, wrapNativeInput, err := dex.WrappedNativeToken(chain, tokenIn)
 	if err != nil {
@@ -146,9 +158,6 @@ func (q *quoteHandler) CreateQuote(
 		}, err
 	}
 
-	amountIn := ConvertDecimalToBigInt(req.Amount, tokenIn.Decimals)
-	walletAddress := uatu.FormatEvmAddress(req.RecipientAddress)
-
 	res, err := dex.GetBestDexQuote(ctx, &dex.BestQuoteParams{
 		AmountIn:           amountIn,
 		Chain:              chain,
@@ -167,11 +176,13 @@ func (q *quoteHandler) CreateQuote(
 	if err != nil {
 		logger.Error("Failed to get best route", zap.Error(err))
 		return APIError{
-			newAPIResponse(http.StatusInternalServerError, err.Error(), nil),
+			newAPIResponse(http.StatusBadGateway, "could not obtain a valid route quote", nil),
 		}, err
 	}
 
-	quoteResponse, err := q.newQuote(ctx, res, chain, tokenIn, tokenOut, walletAddress, slippageBps)
+	quoteResponse, err := q.newQuote(
+		ctx, res, chain, tokenIn, tokenOut, executionTokenIn, walletAddress, slippageBps,
+	)
 	if err != nil {
 		logger.Error("Failed to build quote", zap.Error(err))
 		return newAPIResponse(
@@ -195,7 +206,10 @@ func (q *quoteHandler) CreateQuote(
 // @Param message body uatu.QuoteRequest true "request body to compare DEX quotes"
 // @Success 200 {object} APIResponse{data=[]uatu.RouteQuote}
 // @Failure 400 {object} APIResponse
+// @Failure 413 {object} APIResponse
+// @Failure 415 {object} APIResponse
 // @Failure 500 {object} APIResponse
+// @Failure 502 {object} APIResponse
 // @Router /quotes/routes [post]
 func (q *quoteHandler) GetQuotes(
 	ctx context.Context,
@@ -205,9 +219,6 @@ func (q *quoteHandler) GetQuotes(
 	r *http.Request,
 ) (render.Renderer, error) {
 	req := new(uatu.QuoteRequest)
-	if err := render.Bind(r, req); err != nil {
-		return nil, err
-	}
 	if err := metron.ValidateStruct(req); err != nil {
 		return APIError{
 			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
@@ -219,6 +230,14 @@ func (q *quoteHandler) GetQuotes(
 		return APIError{
 			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
 		}, err
+	}
+	if !req.Amount.GreaterThan(decimal.Zero) {
+		err := fmt.Errorf("amount must be greater than zero")
+		return APIError{newAPIResponse(http.StatusBadRequest, err.Error(), nil)}, err
+	}
+	walletAddress, err := parseRecipientAddress(req.RecipientAddress)
+	if err != nil {
+		return APIError{newAPIResponse(http.StatusBadRequest, err.Error(), nil)}, err
 	}
 
 	chain, err := q.chainRepo.GetBlockchain(ctx, uatu.QueryOptions{ChainID: req.ChainID})
@@ -234,6 +253,10 @@ func (q *quoteHandler) GetQuotes(
 		return APIError{
 			newAPIResponse(http.StatusBadRequest, err.Error(), nil),
 		}, err
+	}
+	amountIn, err := ConvertDecimalToBigInt(req.Amount, tokenIn.Decimals)
+	if err != nil {
+		return APIError{newAPIResponse(http.StatusBadRequest, err.Error(), nil)}, err
 	}
 	executionTokenIn, wrapNativeInput, err := dex.WrappedNativeToken(chain, tokenIn)
 	if err != nil {
@@ -259,9 +282,8 @@ func (q *quoteHandler) GetQuotes(
 			newAPIResponse(http.StatusInternalServerError, "an error occurred fetching pools", nil),
 		}, err
 	}
-
 	responses, err := dex.GetDexQuotes(ctx, &dex.BestQuoteParams{
-		AmountIn:           ConvertDecimalToBigInt(req.Amount, tokenIn.Decimals),
+		AmountIn:           amountIn,
 		Chain:              chain,
 		TokenIn:            tokenIn,
 		TokenOut:           tokenOut,
@@ -269,7 +291,7 @@ func (q *quoteHandler) GetQuotes(
 		ExecutionTokenOut:  executionTokenOut,
 		WrapNativeInput:    wrapNativeInput,
 		UnwrapNativeOutput: unwrapNativeOutput,
-		WalletAddress:      uatu.FormatEvmAddress(req.RecipientAddress),
+		WalletAddress:      walletAddress,
 		Pools:              pools,
 		RPCURL:             q.cfg.GetRPC(chain.Slug),
 		PriceCache:         q.priceCache,
@@ -278,7 +300,7 @@ func (q *quoteHandler) GetQuotes(
 	if err != nil {
 		logger.Error("Failed to get DEX quotes", zap.Error(err))
 		return APIError{
-			newAPIResponse(http.StatusInternalServerError, err.Error(), nil),
+			newAPIResponse(http.StatusBadGateway, "could not obtain valid route quotes", nil),
 		}, err
 	}
 
@@ -300,8 +322,27 @@ func (q *quoteHandler) GetQuotes(
 	return newAPIResponse(http.StatusOK, "DEX quotes fetched successfully", quotes), nil
 }
 
-func ConvertDecimalToBigInt(amount decimal.Decimal, decimals uint8) *big.Int {
-	return amount.Shift(int32(decimals)).BigInt()
+func ConvertDecimalToBigInt(amount decimal.Decimal, decimals uint8) (*big.Int, error) {
+	if !amount.GreaterThan(decimal.Zero) {
+		return nil, fmt.Errorf("amount must be greater than zero")
+	}
+	if amount.Exponent() < -int32(decimals) {
+		return nil, fmt.Errorf("amount supports at most %d decimal places", decimals)
+	}
+
+	integerDigits := int64(amount.NumDigits()) + int64(amount.Exponent()) + int64(decimals)
+	if integerDigits > 78 {
+		return nil, fmt.Errorf("amount exceeds uint256")
+	}
+	scaled := amount.Shift(int32(decimals))
+	value := scaled.BigInt()
+	if !scaled.Equal(decimal.NewFromBigInt(value, 0)) {
+		return nil, fmt.Errorf("amount supports at most %d decimal places", decimals)
+	}
+	if value.Sign() <= 0 || value.BitLen() > 256 {
+		return nil, fmt.Errorf("amount exceeds uint256")
+	}
+	return value, nil
 }
 
 func getToken(tokens []uatu.Token, tokenAddress common.Address) (uatu.Token, error) {
@@ -318,11 +359,23 @@ func getTokenInAndOut(
 	tokens []uatu.Token,
 	token0, token1 string,
 ) (uatu.Token, uatu.Token, error) {
-	tokenIn, err := getToken(tokens, uatu.FormatEvmAddress(token0))
+	tokenInAddress, err := uatu.ParseEVMAddress(token0)
+	if err != nil {
+		return uatu.Token{}, uatu.Token{}, fmt.Errorf("tokenIn is not a valid EVM address")
+	}
+	tokenOutAddress, err := uatu.ParseEVMAddress(token1)
+	if err != nil {
+		return uatu.Token{}, uatu.Token{}, fmt.Errorf("tokenOut is not a valid EVM address")
+	}
+	if tokenInAddress == tokenOutAddress {
+		return uatu.Token{}, uatu.Token{}, fmt.Errorf("tokenIn and tokenOut must be different")
+	}
+
+	tokenIn, err := getToken(tokens, tokenInAddress)
 	if err != nil {
 		return uatu.Token{}, uatu.Token{}, fmt.Errorf("tokenIn was not found on the selected chain")
 	}
-	tokenOut, err := getToken(tokens, uatu.FormatEvmAddress(token1))
+	tokenOut, err := getToken(tokens, tokenOutAddress)
 	if err != nil {
 		return uatu.Token{}, uatu.Token{}, fmt.Errorf("tokenOut was not found on the selected chain")
 	}
@@ -330,11 +383,22 @@ func getTokenInAndOut(
 	return tokenIn, tokenOut, nil
 }
 
+func parseRecipientAddress(raw string) (common.Address, error) {
+	address, err := uatu.ParseEVMAddress(raw)
+	if err != nil {
+		return common.Address{}, fmt.Errorf("recipientAddress is not a valid EVM address")
+	}
+	if address == (common.Address{}) {
+		return common.Address{}, fmt.Errorf("recipientAddress must not be the zero address")
+	}
+	return address, nil
+}
+
 func (q *quoteHandler) newQuote(
 	ctx context.Context,
 	res *uatu.IDexResponse,
 	chain uatu.Chain,
-	tokenIn, tokenOut uatu.Token,
+	tokenIn, tokenOut, executionTokenIn uatu.Token,
 	walletAddress common.Address,
 	slippageBps uint,
 ) (*uatu.QuoteResponse, error) {
@@ -362,7 +426,7 @@ func (q *quoteHandler) newQuote(
 	steps := make([]uatu.Actions, 0, 3)
 	if len(res.EncodedERC20Approval) != 0 {
 		msg := fmt.Sprintf("%s token approval", tokenIn.Symbol)
-		steps = append(steps, step(msg, tokenIn.Address, res.EncodedERC20Approval, nil))
+		steps = append(steps, step(msg, executionTokenIn.Address, res.EncodedERC20Approval, nil))
 	}
 
 	if len(res.EncodedPermit2Approval) != 0 {
