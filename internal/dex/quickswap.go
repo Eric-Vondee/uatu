@@ -97,7 +97,7 @@ func (c *Client) quickSwapV2(ctx context.Context, d uatu.IDexRequest) (*uatu.IDe
 		}
 	}
 
-	pool, err := c.GetV2Pool(d.PairAddress)
+	pool, err := c.GetV2Pool(ctx, d.PairAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func (c *Client) quickSwapV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDe
 			return nil, err
 		}
 	}
-	pool, err := c.GetV3Pool(d.PairAddress)
+	pool, err := c.GetV3Pool(ctx, d.PairAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +170,7 @@ func (c *Client) quickSwapV3(ctx context.Context, d uatu.IDexRequest) (*uatu.IDe
 		return nil, fmt.Errorf("token %s is not in pool %s", d.TokenIn, d.PairAddress)
 	}
 
-	amountOut, err := c.getV3AmountOut(d.AmountIn, quoterAddress, tokenIn, d.TokenOut, pool.Fee)
+	amountOut, err := c.getV3AmountOut(ctx, d.AmountIn, quoterAddress, tokenIn, d.TokenOut, pool.Fee)
 	if err != nil {
 		return nil, err
 	}

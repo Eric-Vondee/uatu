@@ -115,7 +115,7 @@ func (c *Client) Agni(ctx context.Context, d uatu.IDexRequest) (*uatu.IDexRespon
 	}
 
 	quoterAddress := uatu.FormatEvmAddress(d.Dex.V3QuoterAddress)
-	amountOut, err := c.getV3AmountOut(d.AmountIn, quoterAddress, tokenIn, d.TokenOut, pool.Fee)
+	amountOut, err := c.getV3AmountOut(ctx, d.AmountIn, quoterAddress, tokenIn, d.TokenOut, pool.Fee)
 	if err != nil {
 		return nil, err
 	}

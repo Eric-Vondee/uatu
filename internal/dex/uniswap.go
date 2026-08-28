@@ -70,20 +70,21 @@ func (c *Client) GetV2Pair(address, token0, token1 common.Address) (common.Addre
 	return pair, nil
 }
 
-func (c *Client) GetV2Pool(address common.Address) (*V2Pool, error) {
+func (c *Client) GetV2Pool(ctx context.Context, address common.Address) (*V2Pool, error) {
 	poolContract, err := uniswap.NewV2PoolCaller(address, c.client)
 	if err != nil {
 		return nil, fmt.Errorf("could not bind v2 pool: %w", err)
 	}
-	token0, err := poolContract.Token0(&bind.CallOpts{})
+	opts := &bind.CallOpts{Context: ctx}
+	token0, err := poolContract.Token0(opts)
 	if err != nil {
 		return nil, fmt.Errorf("could not get token0: %w", err)
 	}
-	token1, err := poolContract.Token1(&bind.CallOpts{})
+	token1, err := poolContract.Token1(opts)
 	if err != nil {
 		return nil, fmt.Errorf("could not get token1: %w", err)
 	}
-	reserve, err := poolContract.GetReserves(&bind.CallOpts{})
+	reserve, err := poolContract.GetReserves(opts)
 	if err != nil {
 		return nil, fmt.Errorf("could not get reserves: %w", err)
 	}
@@ -117,12 +118,12 @@ func (c *Client) GetV3Pair(address, token0, token1 common.Address) ([]V3Pair, er
 	return pairs, nil
 }
 
-func (c *Client) GetV3Pool(address common.Address) (*V3Pool, error) {
+func (c *Client) GetV3Pool(ctx context.Context, address common.Address) (*V3Pool, error) {
 	poolContract, err := uniswap.NewV3PoolCaller(address, c.client)
 	if err != nil {
 		return nil, fmt.Errorf("could not bind v3 pool: %w", err)
 	}
-	opts := &bind.CallOpts{}
+	opts := &bind.CallOpts{Context: ctx}
 	token0, err := poolContract.Token0(opts)
 	if err != nil {
 		return nil, fmt.Errorf("could not get token0: %w", err)
@@ -178,6 +179,7 @@ func (c *Client) getV2AmountOut(
 }
 
 func (c *Client) getV3AmountOut(
+	ctx context.Context,
 	amountIn *big.Int,
 	quoter, tokenIn, tokenOut common.Address,
 	fee *big.Int,
@@ -195,7 +197,7 @@ func (c *Client) getV3AmountOut(
 	}
 	raw := &uniswap.V3QuoterRaw{Contract: quoterContract}
 	var out []interface{}
-	if err := raw.Call(&bind.CallOpts{}, &out, "quoteExactInputSingle", params); err != nil {
+	if err := raw.Call(&bind.CallOpts{Context: ctx}, &out, "quoteExactInputSingle", params); err != nil {
 		return nil, fmt.Errorf("could not quote v3 amount out: %w", err)
 	}
 	amountOut, ok := out[0].(*big.Int)
@@ -381,7 +383,7 @@ func (c *Client) swapV2UniversalRouter(ctx context.Context, d uatu.IDexRequest) 
 		}
 	}
 
-	pool, err := c.GetV2Pool(d.PairAddress)
+	pool, err := c.GetV2Pool(ctx, d.PairAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -537,14 +539,14 @@ func (c *Client) swapV3UniversalRouter(ctx context.Context, d uatu.IDexRequest) 
 			}
 		}
 	}
-	pool, err := c.GetV3Pool(d.PairAddress)
+	pool, err := c.GetV3Pool(ctx, d.PairAddress)
 	if err != nil {
 		return nil, err
 	}
 	if tokenIn != pool.Token0 && tokenIn != pool.Token1 {
 		return nil, fmt.Errorf("token %s is not in pool %s", d.TokenIn, d.PairAddress)
 	}
-	amountOut, err := c.getV3AmountOut(d.AmountIn, quoterAddress, tokenIn, d.TokenOut, pool.Fee)
+	amountOut, err := c.getV3AmountOut(ctx, d.AmountIn, quoterAddress, tokenIn, d.TokenOut, pool.Fee)
 	if err != nil {
 		return nil, err
 	}
