@@ -2,8 +2,10 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/render"
 	"github.com/uatu"
@@ -133,7 +135,7 @@ func (c *chainHandler) GetPools(
 // @Produce json
 // @Param chainId query int true "EVM chain ID"
 // @Param slug query string true "DEX slug, e.g. uniswap"
-// @Success 200 {object} APIResponse{data=uatu.Dex}
+// @Success 200 {object} APIResponse{data=[]uatu.Dex}
 // @Failure 400 {object} APIResponse
 // @Failure 500 {object} APIResponse
 // @Router /blockchains/dex [get]
@@ -150,8 +152,14 @@ func (c *chainHandler) GetDex(
 			newAPIResponse(http.StatusBadRequest, "invalid chain id", nil),
 		}, err
 	}
+	slug := strings.TrimSpace(r.URL.Query().Get("slug"))
+	if slug == "" {
+		err := fmt.Errorf("dex slug is required")
+		return APIError{newAPIResponse(http.StatusBadRequest, err.Error(), nil)}, err
+	}
 	dex, err := c.chainRepo.GetDex(ctx, uatu.QueryOptions{
 		ChainID: uint(chainID),
+		Slug:    strings.ToLower(slug),
 	})
 	if err != nil {
 		logger.Error("Failed to get dex",
